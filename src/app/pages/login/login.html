@@ -4,7 +4,7 @@
     </div>
     <div class="login-container bg-pink-300 w-1/2 h-full flex flex-col justify-center items-center gap-10">
         <h1 class="font-bold text-7xl sm:text-5xl">Fique Bella</h1>
-        <div class="login-box w-1/2 sm:w-2/3">
+        <form class="login-box w-1/2 sm:w-2/3">
           <div class="login-form flex flex-col gap-4">
             <div class="input-group flex flex-col">
               <label for="username">Username</label>
@@ -14,8 +14,8 @@
               <label for="password">Password</label>
               <input type="password" id="password" [(ngModel)]='password' name="password" required/>
             </div>
-            <button (click)="login()" class="mt-4 w-full bg-pink-400 p-2 font-bold rounded-xl hover:bg-pink-500">Login</button>
+            <button type="submit" (click)="login()" class="mt-4 w-full bg-pink-400 p-2 font-bold rounded-xl hover:bg-pink-500">Login</button>
           </div>
-        </div>
+        </form>
     </div>
 </div>
