@@ -1,0 +1,21 @@
+<div class="base-login w-screen h-screen flex bg-blue-400">
+    <div class="img-container w-1/2 overflow-hidden">
+        <img src="../../../assets/fundo-login.jpg" alt="" class="w-full h-full object-cover" />
+    </div>
+    <div class="login-container bg-pink-300 w-1/2 h-full flex flex-col justify-center items-center gap-10">
+        <h1 class="font-bold text-7xl sm:text-5xl">Fique Bella</h1>
+        <div class="login-box w-1/2 sm:w-2/3">
+          <div class="login-form flex flex-col gap-4">
+            <div class="input-group flex flex-col">
+              <label for="username">Username</label>
+              <input type="text" id="username" [(ngModel)]='username' name="username" required/>
+            </div>
+            <div class="input-group flex flex-col">
+              <label for="password">Password</label>
+              <input type="password" id="password" [(ngModel)]='password' name="password" required/>
+            </div>
+            <button (click)="login()" class="mt-4 w-full bg-pink-400 p-2 font-bold rounded-xl hover:bg-pink-500">Login</button>
+          </div>
+        </div>
+    </div>
+</div>

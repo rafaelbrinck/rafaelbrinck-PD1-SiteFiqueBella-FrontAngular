@@ -1,0 +1,13 @@
+.base-login {
+  font-family: 'Julius Sans One', sans-serif;
+}
+input {
+  background-color: white;
+  font-size: 1.2rem;
+  padding: 4px;
+  border-radius: 10px;
+  border: none;
+}
+.login-box {
+  max-width: 500px;
+}
