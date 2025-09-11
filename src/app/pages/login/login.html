@@ -1,21 +1,29 @@
-<div class="base-login w-screen h-screen flex bg-blue-400">
-    <div class="img-container w-1/2 overflow-hidden">
-        <img src="../../../assets/fundo-login.jpg" alt="" class="w-full h-full object-cover" />
-    </div>
-    <div class="login-container bg-pink-300 w-1/2 h-full flex flex-col justify-center items-center gap-10">
-        <h1 class="font-bold text-7xl sm:text-5xl">Fique Bella</h1>
-        <form class="login-box w-1/2 sm:w-2/3">
-          <div class="login-form flex flex-col gap-4">
-            <div class="input-group flex flex-col">
-              <label for="username">Username</label>
-              <input type="text" id="username" [(ngModel)]='username' name="username" required/>
-            </div>
-            <div class="input-group flex flex-col">
-              <label for="password">Password</label>
-              <input type="password" id="password" [(ngModel)]='password' name="password" required/>
-            </div>
-            <button type="submit" (click)="login()" class="mt-4 w-full bg-pink-400 p-2 font-bold rounded-xl hover:bg-pink-500">Login</button>
-          </div>
-        </form>
+<div class="base-login w-screen h-screen bg-gray-100 flex justify-center items-center">
+    <div class="container-card w-full h-full lg:w-4/5 lg:h-auto lg:max-w-4xl lg:shadow-xl lg:rounded-lg flex overflow-hidden">
+
+        <div class="img-container hidden lg:block lg:w-1/2">
+            <img src="../../../assets/fundo-login.jpg" alt="Mulher fazendo tratamento de beleza" class="w-full h-full object-cover" />
+        </div>
+
+        <div class="login-container w-full lg:w-1/2 h-full flex flex-col justify-center items-center bg-white p-8 sm:p-12 gap-8">
+            <h1 class="font-bold text-4xl md:text-5xl text-gray-800">Fique Bella</h1>
+
+            <form class="w-full max-w-sm">
+                <div class="login-form flex flex-col gap-5">
+                    <div class="input-group flex flex-col">
+                        <label for="username" class="font-medium text-gray-600 mb-1">Usuário</label>
+                        <input type="text" id="username" [(ngModel)]='username' name="username" required class="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400"/>
+                    </div>
+                    <div class="input-group flex flex-col">
+                        <label for="password" class="font-medium text-gray-600 mb-1">Senha</label>
+                        <input type="password" id="password" [(ngModel)]='password' name="password" required class="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400"/>
+                    </div>
+                    <button type="submit" (click)="login()" class="mt-4 w-full bg-pink-500 text-white p-3 font-bold rounded-lg hover:bg-pink-600 transition-colors duration-300 shadow-md hover:shadow-lg">
+                        Login
+                    </button>
+                </div>
+            </form>
+        </div>
+        
     </div>
 </div>

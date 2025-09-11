@@ -8,16 +8,4 @@ import { Router } from '@angular/router';
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
 })
-export class Home {
-  expandNav = false;
-
-  constructor(private router: Router) {}
-
-  toggleNav() {
-    this.expandNav = !this.expandNav;
-  }
-  logout() {
-    this.expandNav = false;
-    this.router.navigate(['/login']);
-  }
-}
+export class Home {}
