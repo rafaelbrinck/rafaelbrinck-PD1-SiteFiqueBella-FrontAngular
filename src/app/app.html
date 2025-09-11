@@ -5,7 +5,7 @@
       md:relative md:w-64 md:h-full md:flex md:flex-col md:p-4 md:border-t-0 md:text-white" *ngIf="showNav"> 
 
       <div class="hidden md:flex items-center mb-8">
-        <i class="bi bi-gem text-3xl text-pink-400"></i>
+        <i class="bi bi-gem text-4xl text-pink-400"></i>
         <h1 class="text-2xl font-bold ml-3">Fique Bella</h1>
       </div>
 
@@ -15,20 +15,20 @@
           <a routerLink="/home" class="
               flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16
               md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3
-              hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200">
+              hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
               <i class="bi bi-house-door-fill text-2xl"></i>
               <span class="font-semibold hidden md:block">Home</span>
           </a>
 
-          <a routerLink="/estatisticas" class="flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16 md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3 hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200">
+          <a routerLink="/estatisticas" class="flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16 md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3 hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
             <i class="bi bi-bar-chart-line-fill text-2xl"></i>
             <span class="font-semibold hidden md:block">Estatísticas</span>
           </a>
-          <a routerLink="/calendario" class="flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16 md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3 hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200">
+          <a routerLink="/agendamentos" class="flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16 md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3 hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
               <i class="bi bi-calendar-heart text-2xl"></i>
-              <span class="font-semibold hidden md:block">Calendário</span>
+              <span class="font-semibold hidden md:block">Agendamentos</span>
           </a>
-          <a routerLink="/cadastrar" class="flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16 md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3 hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200">
+          <a routerLink="/cadastrar" class="flex flex-col items-center justify-center p-2 text-pink-100 text-xs w-16 md:flex-row md:justify-start md:w-full md:text-white md:text-base md:p-3 md:rounded-lg md:space-x-3 hover:text-pink-400 md:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
               <i class="bi bi-person-circle text-2xl"></i>
               <span class="font-semibold hidden md:block">Cadastrar</span>
           </a>
@@ -48,6 +48,8 @@
     <div class="p-8">
     </div>
 </main> -->
-<router-outlet />
+<div class="w-full h-full overflow-auto p-2">
+  <router-outlet />
+</div>
 
 </div>

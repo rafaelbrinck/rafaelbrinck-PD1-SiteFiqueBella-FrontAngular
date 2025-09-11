@@ -1,0 +1,163 @@
+/* --- Variáveis de Cor para reusar --- */
+:host {
+  --fc-border-color: theme('colors.gray.200');
+  --fc-today-bg-color: transparent; /* O fundo será controlado pela classe .fc-day-today */
+}
+
+/* --- BARRA DE FERRAMENTAS (HEADER) --- */
+:host ::ng-deep .fc-toolbar-title {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: bold; /* font-bold */
+  color: #374151; /* text-gray-700 */
+}
+@media (min-width: 768px) {
+  :host ::ng-deep .fc-toolbar-title {
+    font-size: 1.5rem; /* md:text-2xl */
+  }
+}
+
+:host ::ng-deep .fc-button {
+  background: transparent; /* bg-transparent */
+  color: #4b5563; /* text-gray-600 */
+  border: none; /* border-none */
+  box-shadow: none; /* shadow-none */
+  outline: none; /* focus:outline-none */
+}
+
+:host ::ng-deep .fc-button:focus {
+  outline: none;
+  box-shadow: none; /* focus:ring-0 */
+}
+
+:host ::ng-deep .fc-button .fc-icon {
+  font-size: 1.25rem; /* text-xl */
+}
+
+/* Botões de navegação (prev, next, today) */
+:host ::ng-deep .fc-toolbar-chunk:first-child .fc-button {
+  background: #e5e7eb; /* bg-gray-200 */
+  color: #374151; /* text-gray-700 */
+  border-radius: 0.375rem; /* rounded-md */
+  transition: background-color 0.2s; /* transition-colors duration-200 */
+  margin-right: 5px;
+}
+
+:host ::ng-deep .fc-toolbar-chunk:first-child .fc-button:hover {
+  background: #d1d5db; /* hover:bg-gray-300 */
+}
+/* --- CORPO DO CALENDÁRIO --- */
+
+/* Cor de fundo do dia de hoje */
+:host ::ng-deep .fc-day-today {
+  background: #fdf2f8 !important; /* bg-pink-50 */
+}
+
+/* Cabeçalho dos dias da semana (Seg, Ter, etc.) */
+:host ::ng-deep .fc-col-header-cell {
+  background: #fff; /* Fundo branco para um look mais limpo */
+}
+
+:host ::ng-deep .fc-dayheader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  border: 0;
+}
+
+:host ::ng-deep .fc-dayheader-date {
+  font-weight: 600; /* font-semibold */
+  color: #374151; /* text-gray-700 */
+}
+
+:host ::ng-deep .fc-dayheader-day {
+  font-size: 0.875rem; /* text-sm */
+  color: #6b7280; /* text-gray-500 */
+  font-weight: 500; /* font-medium */
+}
+/* --- EVENTOS --- */
+:host ::ng-deep .fc-event {
+  border-radius: 0.5rem; /* rounded-lg */
+  border: none; /* border-none */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  padding: 0.25rem; /* p-1 */
+  cursor: pointer; /* cursor-pointer */
+  transition: transform 0.2s; /* transition-transform duration-200 */
+  font-size: 0.8rem;
+}
+:host ::ng-deep .fc-event:hover {
+  transform: scale(1.05); /* hover:scale-105 */
+}
+
+:host ::ng-deep .fc-event-main {
+  padding: 0.25rem; /* p-1 */
+  font-weight: 600; /* font-semibold */
+}
+
+/* --- CORPO DO CALENDÁRIO --- */
+
+/* Cor de fundo do dia de hoje */
+:host ::ng-deep .fc-day-today {
+  background: #fdf2f8 !important; /* bg-pink-50 */
+}
+
+/* Cabeçalho dos dias da semana (Seg, Ter, etc.) */
+:host ::ng-deep .fc-col-header-cell {
+  background: #fff; /* Fundo branco para um look mais limpo */
+}
+
+:host ::ng-deep .fc-dayheader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  border: 0;
+}
+
+:host ::ng-deep .fc-dayheader-date {
+  font-weight: 600; /* font-semibold */
+  color: #374151; /* text-gray-700 */
+}
+
+:host ::ng-deep .fc-dayheader-day {
+  font-size: 0.875rem; /* text-sm */
+  color: #6b7280; /* text-gray-500 */
+  font-weight: 500; /* font-medium */
+}
+
+/* Linha do tempo (08, 09, 10...) */
+:host ::ng-deep .fc-timegrid-slot-label {
+  color: #6b7280; /* text-gray-500 */
+}
+
+:host ::ng-deep .fc-timegrid-slot-lane {
+  border-style: solid;
+  border: 1px solid grey;
+}
+
+/* --- EVENTOS --- */
+:host ::ng-deep .fc-event {
+  border-radius: 0.5rem; /* rounded-lg */
+  border: none; /* border-none */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  padding: 0.25rem; /* p-1 */
+  cursor: pointer; /* cursor-pointer */
+  transition: transform 0.2s; /* transition-transform duration-200 */
+  font-size: 0.8rem;
+}
+:host ::ng-deep .fc-event:hover {
+  transform: scale(1.05); /* hover:scale-105 */
+}
+
+:host ::ng-deep .fc-event-main {
+  font-weight: 600; /* font-semibold */
+  white-space: normal; /* ESSENCIAL: Permite que o texto quebre a linha */
+  line-height: 1.2; /* Diminui o espaçamento entre as linhas de texto */
+  font-size: 0.75rem; /* text-xs do Tailwind, um pouco menor para caber melhor */
+  padding: 2px 4px; /* Ajuste fino no padding interno */
+}
+
+/* --- HORÁRIOS FORA DE EXPEDIENTE --- */
+:host ::ng-deep .fc-non-business {
+  background-color: rgba(249, 250, 251, 0.7); /* Cinza bem claro com opacidade */
+}
