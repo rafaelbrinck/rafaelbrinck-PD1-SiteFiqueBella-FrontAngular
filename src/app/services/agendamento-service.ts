@@ -3,27 +3,42 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs'; // Importe o 'of' do RxJS
 import { delay } from 'rxjs/operators'; // Opcional: para simular a demora da rede
+import { Cliente } from '../models/cliente';
+import { Servico } from '../models/servicos';
+import { ClienteService } from './cliente-service';
+import { ServicosService } from './servicos-service';
 
 // A interface continua a mesma, garantindo o "contrato"
 export interface Agendamento {
-  id?: number | string;
+  id: number | string;
   title: string;
   start: string;
   end: string;
-  extendedProps?: any;
-  // Você pode adicionar cores para diferenciar serviços
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;
+  extendedProps: {
+    cliente_id: number;
+    funcionaria_id: number;
+    servico_id: number;
+  };
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AgendamentoService {
-  // Não vamos usar o HttpClient por enquanto, mas podemos deixar injetado.
-  // constructor(private http: HttpClient) { }
-  constructor() {}
+  listaClientes: Cliente[] = [];
+  listaServicos: Servico[] = [];
+
+  constructor(private clienteService: ClienteService, private servicoService: ServicosService) {
+    this.clienteService.listaClientes$.subscribe((clientes) => {
+      this.listaClientes = clientes;
+    });
+    this.servicoService.listaServicos$.subscribe((servicos) => {
+      this.listaServicos = servicos;
+    });
+  }
 
   // Este é o método que vamos "mockar"
   getAgendamentos(): Observable<Agendamento[]> {
@@ -36,50 +51,67 @@ export class AgendamentoService {
     const dia = hoje.getDate().toString().padStart(2, '0'); // Garante dois dígitos para o dia
 
     // Criamos um array de agendamentos em memória
-    const agendamentosFicticios: Agendamento[] = [
+    const agendamentosBase = [
       {
         id: 1,
-        title: 'Corte Masculino - Carlos Pereira',
         start: `${ano}-${mes}-${dia}T09:00:00`,
-        end: `${ano}-${mes}-${dia}T09:45:00`,
-        backgroundColor: '#3788d8', // Azul padrão
-        borderColor: '#3788d8',
+        end: `${ano}-${mes}-${dia}T11:00:00`,
+        cliente_id: 3,
+        funcionaria_id: 1,
+        servico_id: 5,
       },
       {
         id: 2,
-        title: 'Manicure e Pedicure - Sofia Almeida',
-        start: `${ano}-${mes}-${dia}T10:00:00`,
-        end: `${ano}-${mes}-${dia}T11:30:00`,
-        backgroundColor: '#e35a76', // Um tom de rosa
-        borderColor: '#e35a76',
+        start: `${ano}-${mes}-${dia}T11:00:00`,
+        end: `${ano}-${mes}-${dia}T12:00:00`,
+        cliente_id: 1,
+        funcionaria_id: 2,
+        servico_id: 6,
       },
       {
         id: 3,
-        title: 'Coloração - Ricardo Neves',
         start: `${ano}-${mes}-${dia}T14:00:00`,
-        end: `${ano}-${mes}-${dia}T16:00:00`,
-        backgroundColor: '#8a4d1a', // Um tom de marrom para coloração
-        borderColor: '#8a4d1a',
+        end: `${ano}-${mes}-${dia}T17:00:00`,
+        cliente_id: 5,
+        funcionaria_id: 1,
+        servico_id: 4,
       },
-      // Agendamento para amanhã
       {
         id: 4,
-        title: 'Escova Progressiva - Fernanda Costa',
-        start: this.adicionarDias(hoje, 1).toISOString().substring(0, 19), // Usando um helper para o dia seguinte
-        end: this.adicionarDias(hoje, 1, 3).toISOString().substring(0, 19), // Duração de 3 horas
-        backgroundColor: '#28a745', // Verde
-        borderColor: '#28a745',
+        start: this.adicionarDias(hoje, 1, 0, 10, 0).toISOString().substring(0, 19),
+        end: this.adicionarDias(hoje, 1, 0, 10, 45).toISOString().substring(0, 19),
+        cliente_id: 4,
+        funcionaria_id: 3,
+        servico_id: 2,
       },
-      // Agendamento para ontem
       {
         id: 5,
-        title: 'Limpeza de Pele - Joana Martins',
-        start: this.adicionarDias(hoje, -1, 0, 15, 30).toISOString().substring(0, 19), // Ontem às 15:30
-        end: this.adicionarDias(hoje, -1, 1, 15, 30).toISOString().substring(0, 19), // Duração de 1 hora
-        backgroundColor: '#f5b041', // Laranja
-        borderColor: '#f5b041',
+        start: this.adicionarDias(hoje, -1, 0, 18, 0).toISOString().substring(0, 19),
+        end: this.adicionarDias(hoje, -1, 1, 18, 0).toISOString().substring(0, 19),
+        cliente_id: 7,
+        funcionaria_id: 4,
+        servico_id: 9,
       },
     ];
+
+    const agendamentosFicticios: Agendamento[] = agendamentosBase.map((ag) => {
+      const cliente = this.listaClientes.find((c) => c.id === ag.cliente_id);
+      const servico = this.listaServicos.find((s) => s.id === ag.servico_id);
+
+      return {
+        id: ag.id,
+        title: `${servico?.nome} - ${cliente?.nome}`, // Título dinâmico!
+        start: ag.start,
+        end: ag.end,
+        backgroundColor: servico?.cor || '#6b7280', // Usa a cor do serviço ou uma cor padrão
+        borderColor: servico?.cor || '#6b7280',
+        extendedProps: {
+          cliente_id: ag.cliente_id,
+          funcionaria_id: ag.funcionaria_id,
+          servico_id: ag.servico_id,
+        },
+      };
+    });
 
     // Usamos o operador 'of' do RxJS para retornar o array como um Observable,
     // assim como o HttpClient faria.

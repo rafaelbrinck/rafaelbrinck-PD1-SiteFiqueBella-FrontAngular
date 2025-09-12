@@ -14,7 +14,11 @@ export class Login {
   username: string = '';
   password: string = '';
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(private router: Router, private authService: AuthService) {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/home']);
+    }
+  }
   login() {
     this.authService.login(this.username, this.password).subscribe((success) => {
       if (success) {
