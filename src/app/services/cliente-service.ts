@@ -91,4 +91,25 @@ export class ClienteService {
 
   private listaclientesSubject = new BehaviorSubject<Cliente[]>(this.listaClientesMock);
   public listaClientes$ = this.listaclientesSubject.asObservable();
+
+  salvarCliente(cliente: Cliente) {
+    var lista = this.listaclientesSubject.getValue();
+    if (cliente.id) {
+      const index = lista.findIndex((f) => f.id === cliente.id);
+      if (index !== -1) {
+        lista[index] = cliente;
+      }
+    } else {
+      cliente.id = lista.length++;
+      lista.push(cliente);
+    }
+    this.listaclientesSubject.next(lista);
+  }
+
+  deletar(id?: number) {
+    if (!id) return;
+    var lista = this.listaclientesSubject.getValue();
+    var deletar = lista.filter((c) => c.id !== id);
+    this.listaclientesSubject.next(deletar);
+  }
 }

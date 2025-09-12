@@ -1,18 +1,15 @@
-<div class="container flex flex-col h-full pb-11 sm:pb-0">
-  
+<div class="flex flex-col h-full container pb-11 sm:pb-0">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
     <div class="flex items-center">
       <i class="bi bi-person-heart text-3xl text-pink-500"></i>
       <h1 class="text-2xl font-bold text-gray-700 ml-3">Clientes Cadastrados</h1>
     </div>
-    
     <div class="flex flex-col sm:flex-row sm:items-center gap-4">
       <div class="relative">
         <input type="text" placeholder="Buscar cliente..." class="w-full sm:w-64 p-2 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
         <i class="bi bi-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-        
       </div>
-      <button class="flex items-center justify-center gap-2 bg-pink-500 text-white font-semibold p-2 rounded-lg hover:bg-pink-600 transition-colors shadow-sm">
+      <button (click)="abrirModalParaNovo()" class="flex items-center justify-center gap-2 bg-pink-500 text-white font-semibold p-2 rounded-lg hover:bg-pink-600 transition-colors shadow-sm">
         <i class="bi bi-plus-circle-fill"></i>
         <span>Adicionar Cliente</span>
       </button>
@@ -20,32 +17,20 @@
   </div>
 
   <div class="flex-1 bg-white rounded-lg shadow-md overflow-auto">
-    
     <div class="block md:hidden">
       <div *ngIf="listaClientes.length > 0; else noClients">
-        <div *ngFor="let cliente of listaClientes; let isLast = last" 
-             class="p-4 border-gray-200" 
-             [ngClass]="{'border-b': !isLast}">
-          
+        <div *ngFor="let cliente of listaClientes; let isLast = last" class="p-4 border-gray-200" [ngClass]="{'border-b': !isLast}">
           <div class="flex justify-between items-start">
             <div>
               <p class="font-bold text-lg text-gray-800">{{ cliente.nome }} {{ cliente.sobrenome }}</p>
-              <p class="text-sm text-gray-600 flex items-center gap-2 mt-1">
-                <i class="bi bi-telephone-fill"></i>
-                <span>{{ cliente.telefone }}</span>
-              </p>
-              <p class="text-sm text-gray-600 flex items-center gap-2 mt-1">
-                <i class="bi bi-envelope-fill"></i>
-                <span>{{ cliente.email }}</span>
-              </p>
+              <p class="text-sm text-gray-600 flex items-center gap-2 mt-1"><i class="bi bi-telephone-fill"></i><span>{{ cliente.telefone }}</span></p>
+              <p class="text-sm text-gray-600 flex items-center gap-2 mt-1"><i class="bi bi-envelope-fill"></i><span>{{ cliente.email }}</span></p>
             </div>
-            
             <div class="flex gap-2 text-xl">
-              <button class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
+              <button (click)="abrirModalParaEditar(cliente)" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
               <button class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -62,20 +47,16 @@
         </thead>
         <tbody *ngIf="listaClientes.length > 0; else noClients">
           <tr *ngFor="let cliente of listaClientes" class="hover:bg-pink-50 transition-colors">
-            <td class="p-4 border-b border-gray-200 font-medium text-gray-800">
-              {{ cliente.nome }} {{ cliente.sobrenome }}
-            </td>
+            <td class="p-4 border-b border-gray-200 font-medium text-gray-800">{{ cliente.nome }} {{ cliente.sobrenome }}</td>
             <td class="p-4 border-b border-gray-200 text-gray-600">
               <div class="text-sm">{{ cliente.email }}</div>
               <div class="text-xs">{{ cliente.telefone }}</div>
             </td>
-            <td class="p-4 border-b border-gray-200 text-gray-600">
-              {{ cliente.data_nascimento | date:'dd/MM/yyyy' }}
-            </td>
+            <td class="p-4 border-b border-gray-200 text-gray-600">{{ cliente.data_nascimento | date:'dd/MM/yyyy' }}</td>
             <td class="p-4 border-b border-gray-200">
               <div class="flex gap-4 justify-center text-xl">
-                <button title="Editar Cliente" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
-                <button title="Excluir Cliente" class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
+                <button (click)="abrirModalParaEditar(cliente)" title="Editar Cliente" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
+                <button (click)="deletar(cliente.id!)" title="Excluir Cliente" class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
               </div>
             </td>
           </tr>
@@ -89,6 +70,22 @@
         <p>Nenhum cliente cadastrado ainda.</p>
       </div>
     </ng-template>
+  </div>
+</div>
+
+
+<div *ngIf="isModalVisible" 
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300"
+     (click)="fecharModal()">
+  
+  <div (click)="$event.stopPropagation()" 
+       class="bg-gray-100 rounded-lg shadow-xl w-full max-w-2xl m-4 animate-fade-in-up">
+    
+    <app-form-cliente
+      [clienteParaEditar]="clienteSelecionado"
+      (save)="salvarCliente($event)"
+      (close)="fecharModal()"
+    ></app-form-cliente>
 
   </div>
 </div>
