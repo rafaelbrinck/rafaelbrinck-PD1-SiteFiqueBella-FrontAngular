@@ -14,4 +14,25 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/calendario/calendario').then((m) => m.Calendario),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'cadastros',
+    loadComponent: () => import('./pages/cadastros/cadastros').then((m) => m.Cadastros),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'clientes',
+    loadComponent: () => import('./components/clientes/clientes').then((m) => m.Clientes),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'funcionarias',
+    loadComponent: () =>
+      import('./components/funcionarias/funcionarias').then((m) => m.Funcionarias),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'servicos',
+    loadComponent: () => import('./components/servicos/servicos').then((m) => m.Servicos),
+    canActivate: [AuthGuard],
+  },
 ];
