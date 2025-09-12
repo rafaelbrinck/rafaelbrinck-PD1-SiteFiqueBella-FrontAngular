@@ -18,7 +18,8 @@ export class AuthService {
   constructor() {}
 
   login(username: string, password: string): Observable<boolean> {
-    const isValidUser = username === 'admin' && password === 'admin';
+    const isValidUser =
+      username.toLocaleLowerCase() === 'admin' && password.toLocaleLowerCase() === 'admin';
     if (!isValidUser) {
       return of(false);
     }
