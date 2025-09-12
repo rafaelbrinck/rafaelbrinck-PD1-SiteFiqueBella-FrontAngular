@@ -14,7 +14,7 @@ export class FuncionariasService {
       sobrenome: 'Almeida',
       email: 'juliana.a@fiquebella.com',
       telefone: '(51) 98811-2233',
-      servicos_ids: [1, 3, 4, 5],
+      servicos_ids: [1, 4, 5],
     },
     {
       id: 2,
@@ -22,7 +22,7 @@ export class FuncionariasService {
       sobrenome: 'Gonçalves',
       email: 'beatriz.g@fiquebella.com',
       telefone: '(51) 99922-3344',
-      servicos_ids: [6, 7],
+      servicos_ids: [6, 9],
     },
     {
       id: 3,
@@ -38,10 +38,30 @@ export class FuncionariasService {
       sobrenome: 'Lima',
       email: 'vanessa.l@fiquebella.com',
       telefone: '(51) 99123-1234',
-      servicos_ids: [8, 9, 10],
+      servicos_ids: [4, 9, 1],
     },
   ];
 
   private listaFuncionariasSubject = new BehaviorSubject<Funcionaria[]>(this.listaFuncionariasMock);
   public listaFuncionarias$ = this.listaFuncionariasSubject.asObservable();
+
+  deletarFuncionaria(id: number) {
+    var lista = this.listaFuncionariasSubject.getValue();
+    var deletar = lista.filter((f) => f.id !== id);
+    this.listaFuncionariasSubject.next(deletar);
+  }
+
+  salvarFuncionaria(funcionaria: Funcionaria) {
+    const lista = this.listaFuncionariasSubject.getValue();
+    if (funcionaria.id) {
+      const index = lista.findIndex((f) => f.id === funcionaria.id);
+      if (index !== -1) {
+        lista[index] = funcionaria;
+      }
+    } else {
+      funcionaria.id = lista.length++;
+      lista.push(funcionaria);
+    }
+    this.listaFuncionariasSubject.next(lista);
+  }
 }

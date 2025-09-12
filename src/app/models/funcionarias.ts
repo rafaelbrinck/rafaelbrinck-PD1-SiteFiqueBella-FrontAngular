@@ -6,6 +6,6 @@ export class Funcionaria {
   sobrenome?: string;
   email?: string;
   telefone?: string;
-  servicos_ids?: number[];
+  servicos_ids: number[] = [];
   servicos?: Servico[];
 }
