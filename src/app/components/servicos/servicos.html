@@ -1,1 +1,81 @@
-<p>servicos works!</p>
+<div class="flex flex-col h-full pb-11 sm:pb-0">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+    <div class="flex items-center">
+      <i class="bi bi-box2-heart-fill text-3xl text-pink-500"></i>
+      <h1 class="text-2xl font-bold text-gray-700 ml-3">Serviços Oferecidos</h1>
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div class="relative">
+        <input type="text" placeholder="Buscar serviço..." class="w-full sm:w-64 p-2 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
+        <i class="bi bi-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      </div>
+      <button class="flex items-center justify-center gap-2 bg-pink-500 text-white font-semibold p-2 rounded-lg hover:bg-pink-600 transition-colors shadow-sm">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>Adicionar Serviço</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 bg-white rounded-lg shadow-md overflow-auto">
+
+    <div class="block md:hidden">
+      <div *ngIf="listaServicos.length > 0; else noServices">
+        <div *ngFor="let servico of listaServicos; let isLast = last"
+             class="p-4 border-gray-200"
+             [ngClass]="{'border-b': !isLast}">
+
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-bold text-lg text-gray-800">{{ servico.nome }}</p>
+              <p class="text-md font-semibold text-pink-600 mt-1">
+                {{ servico.valor | currency:'BRL' }}
+              </p>
+            </div>
+
+            <div class="flex gap-2 text-xl">
+              <button class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
+              <button class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden md:block">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="p-4 font-semibold text-gray-600">Nome do Serviço</th>
+            <th class="p-4 font-semibold text-gray-600">Preço</th>
+            <th class="p-4 font-semibold text-gray-600 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody *ngIf="listaServicos.length > 0; else noServices">
+          <tr *ngFor="let servico of listaServicos" class="hover:bg-pink-50 transition-colors">
+            <td class="p-4 border-b border-gray-200 font-medium text-gray-800">
+              {{ servico.nome }}
+            </td>
+            <td class="p-4 border-b border-gray-200 text-gray-600 font-semibold">
+              {{ servico.valor | currency:'BRL' }}
+            </td>
+            <td class="p-4 border-b border-gray-200">
+              <div class="flex gap-4 justify-center text-xl">
+                <button title="Editar Serviço" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
+                <button title="Excluir Serviço" class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noServices>
+      <div class="text-center p-10 text-gray-500">
+        <i class="bi bi-journal-x text-4xl mb-2"></i>
+        <p>Nenhum serviço cadastrado ainda.</p>
+      </div>
+    </ng-template>
+
+  </div>
+</div>
