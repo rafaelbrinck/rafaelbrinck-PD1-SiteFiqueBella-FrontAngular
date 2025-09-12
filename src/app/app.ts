@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { LoginService } from './services/login';
 import { CommonModule } from '@angular/common';
+import { AuthService } from './services/auth-service';
 
 @Component({
   selector: 'app-root',
@@ -14,10 +14,10 @@ export class App implements OnInit {
   expandNav = false;
   showNav = false;
 
-  constructor(private loginService: LoginService, private router: Router) {}
+  constructor(public authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
-    this.loginService.logado$.subscribe((logado) => {
+    this.authService.logado$.subscribe((logado) => {
       if (!logado) {
         this.showNav = false;
       } else {
@@ -27,7 +27,7 @@ export class App implements OnInit {
   }
 
   logout() {
-    this.loginService.logout();
+    this.authService.logout();
     this.router.navigate(['']);
   }
 }

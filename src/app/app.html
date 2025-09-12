@@ -1,8 +1,8 @@
-<div class="h-screen w-full bg-gray-100 md:flex overflow-hidden">
+<main class="h-screen w-full bg-gray-100 md:flex overflow-hidden">
 
   <nav class="
       fixed bottom-0 z-50 w-full bg-pink-500 border-t 
-      md:relative md:w-64 md:h-full md:flex md:flex-col md:p-4 md:border-t-0 md:text-white" *ngIf="showNav"> 
+      md:relative md:w-64 md:h-full md:flex md:flex-col md:p-4 md:border-t-0 md:text-white" *ngIf="authService.logado$ | async"> 
 
       <div class="hidden md:flex items-center mb-8">
         <i class="bi bi-gem text-4xl text-pink-400"></i>
@@ -48,8 +48,8 @@
     <div class="p-8">
     </div>
 </main> -->
-<div class="w-full h-full overflow-auto p-2">
+<div class="w-full h-full overflow-hidden p-2">
   <router-outlet />
 </div>
 
-</div>
+</main>
