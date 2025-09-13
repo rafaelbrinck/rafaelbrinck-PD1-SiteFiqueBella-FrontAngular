@@ -1,63 +1,86 @@
-// Cole este código no seu arquivo: src/app/pages/calendario/calendario.ts
+// src/app/pages/calendario/calendario.ts
 
 import { Component, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import { CalendarOptions } from '@fullcalendar/core';
+import { DateClickArg } from '@fullcalendar/interaction';
+import { EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list'; // Importar o plugin de lista
+import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
-import { AgendamentoService } from '../../services/agendamento-service';
-
+import { Agendamento, AgendamentoService } from '../../services/agendamento-service';
+import { FormAgendamentoComponent } from '../../components/forms/forms-agendamentos/forms-agendamentos';
+import { ServicosService } from '../../services/servicos-service';
+import { ClienteService } from '../../services/cliente-service';
+import { FuncionariasService } from '../../services/funcionarias-service';
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule],
+  imports: [CommonModule, FullCalendarModule, FormAgendamentoComponent], // Adicione o formulário aqui
   templateUrl: './calendario.html',
   styleUrls: ['./calendario.css'],
 })
 export class Calendario implements OnInit {
   @ViewChild('meuCalendario') calendarComponent!: FullCalendarComponent;
 
-  // Propriedade para definir a view inicial com base na tela
+  // --- LÓGICA DO MODAL ---
+  isModalVisible = false;
+  agendamentoSelecionado: Agendamento | null = null;
+
+  // --- DADOS PARA OS DROPDOWNS DO FORMULÁRIO ---
+  listaClientes: any[] = [];
+  listaServicos: any[] = [];
+  listaFuncionarias: any[] = [];
+
   initialView: 'timeGridWeek' | 'timeGridDay' = 'timeGridWeek';
 
-  constructor(private agendamentoService: AgendamentoService) {}
+  constructor(
+    private agendamentoService: AgendamentoService,
+    private servicosService: ServicosService,
+    private clientesService: ClienteService,
+    private funcionariaService: FuncionariasService
+  ) {
+    this.servicosService.listaServicos$.subscribe((servicos) => {
+      this.listaServicos = servicos;
+    });
+    this.clientesService.listaClientes$.subscribe((clientes) => {
+      this.listaClientes = clientes;
+    });
+    this.funcionariaService.listaFuncionarias$.subscribe((funcionarias) => {
+      this.listaFuncionarias = funcionarias;
+    });
+  }
 
   ngOnInit() {
     // Lógica Mobile-First: Define a view padrão para 'dia' em telas pequenas
     if (window.innerWidth < 768) {
-      // 768px é o breakpoint 'md' do Tailwind
       this.initialView = 'timeGridDay';
     }
   }
 
   calendarOptions: CalendarOptions = {
-    // --- PLUGINS E CONFIGURAÇÕES GERAIS ---
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
     initialView: this.initialView,
     locale: ptBrLocale,
     weekends: true,
-    editable: true,
+    editable: true, // Permite arrastar e soltar eventos
     selectable: true,
     selectMirror: true,
     dayMaxEvents: true,
     allDayText: 'Dia todo',
     noEventsText: 'Nenhum agendamento para mostrar',
-    allDaySlot: false, // Desativa o slot "Dia todo"
+    allDaySlot: false,
 
-    // --- NOVAS OPÇÕES DE INTERVALO DE TEMPO ---
-    slotDuration: '00:30:00', // Define que cada "slot" tem 30 minutos
-    slotLabelInterval: '00:30:00', // Mostra os rótulos de hora (08:00, 08:30...) a cada 30 minutos
+    slotDuration: '00:30:00',
+    slotLabelInterval: '00:30:00',
 
-    // --- HORÁRIOS DE FUNCIONAMENTO ---
     slotMinTime: '08:00:00',
     slotMaxTime: '20:00:00',
-    hiddenDays: [0], // Esconde Domingo
+    hiddenDays: [0],
 
-    // --- BARRA DE FERRAMENTAS (HEADER) ---
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -71,13 +94,7 @@ export class Calendario implements OnInit {
       list: 'Lista',
     },
 
-    // --- CUSTOMIZAÇÃO AVANÇADA DE DATAS E TÍTULOS ---
     viewDidMount: (info) => {
-      // Deixa o título padrão para Mês e Dia
-      if (info.view.type === 'dayGridMonth' || info.view.type === 'timeGridDay') {
-        return;
-      }
-      // Customiza o título apenas para a visão de Semana
       if (info.view.type === 'timeGridWeek') {
         const startDate = info.view.activeStart;
         const endDate = info.view.activeEnd;
@@ -108,14 +125,13 @@ export class Calendario implements OnInit {
       };
     },
 
-    // --- EVENTOS ---
     events: (fetchInfo, successCallback, failureCallback) => {
       this.agendamentoService.getAgendamentos().subscribe({
         next: (agendamentos) => {
-          // Mapeia os agendamentos para garantir que o id seja string
-          const eventos = agendamentos.map((agendamento) => ({
+          // Garante que o id seja string, conforme exigido por EventInput
+          const eventos = agendamentos.map((agendamento: any) => ({
             ...agendamento,
-            id: agendamento.id !== undefined ? String(agendamento.id) : undefined,
+            id: agendamento.id != null ? String(agendamento.id) : undefined,
           }));
           successCallback(eventos);
         },
@@ -126,20 +142,60 @@ export class Calendario implements OnInit {
       });
     },
 
-    // --- INTERAÇÕES (CLICKS) ---
+    // INTERAÇÕES ATUALIZADAS PARA ABRIR O MODAL
     eventClick: this.handleEventClick.bind(this),
     dateClick: this.handleDateClick.bind(this),
   };
 
-  handleEventClick(clickInfo: EventClickArg) {
-    alert(`Agendamento selecionado: '${clickInfo.event.title}'`);
+  // --- MÉTODOS DE CONTROLE DO MODAL E EVENTOS ---
+
+  abrirModalParaNovo(dateInfo: DateClickArg) {
+    const start = new Date(dateInfo.dateStr);
+    const end = new Date(start.getTime() + 60 * 60 * 1000); // Adiciona 1 hora por padrão
+
+    this.agendamentoSelecionado = {
+      start: dateInfo.dateStr,
+      end: end.toISOString().substring(0, 16),
+      extendedProps: {
+        cliente_id: null,
+        servico_id: null,
+        funcionaria_id: null,
+      },
+    };
+    this.isModalVisible = true;
   }
 
-  handleDateClick(arg: { dateStr: string }) {
+  abrirModalParaEditar(clickInfo: EventClickArg) {
+    this.agendamentoSelecionado = {
+      id: clickInfo.event.id,
+      start: clickInfo.event.startStr,
+      end: clickInfo.event.endStr,
+      extendedProps: clickInfo.event.extendedProps,
+    };
+    this.isModalVisible = true;
+  }
+
+  fecharModal() {
+    this.isModalVisible = false;
+    this.agendamentoSelecionado = null;
+  }
+
+  salvarAgendamento(agendamento: any) {
+    console.log('Salvando agendamento (simulação):', agendamento);
+    // Em um app real, você chamaria o serviço para salvar no backend.
+    // Aqui, apenas atualizamos a visualização para refletir a mudança.
     const calendarApi = this.calendarComponent.getApi();
-    // Se não estivermos na visão de dia, muda para a visão de dia da data clicada
-    if (calendarApi.view.type !== 'timeGridDay') {
-      calendarApi.changeView('timeGridDay', arg.dateStr);
-    }
+    calendarApi.refetchEvents(); // Pede ao FullCalendar para buscar os eventos novamente
+    this.fecharModal();
+  }
+
+  // --- HANDLERS ATUALIZADOS QUE CHAMAM OS MÉTODOS DO MODAL ---
+
+  handleEventClick(clickInfo: EventClickArg) {
+    this.abrirModalParaEditar(clickInfo);
+  }
+
+  handleDateClick(dateInfo: DateClickArg) {
+    this.abrirModalParaNovo(dateInfo);
   }
 }

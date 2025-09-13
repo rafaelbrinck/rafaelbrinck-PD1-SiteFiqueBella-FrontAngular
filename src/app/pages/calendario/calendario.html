@@ -10,3 +10,34 @@
   </div>
 
 </div>
+<div class="flex flex-col h-full bg-white rounded-lg shadow-md overflow-hidden">
+  
+  <div class="flex items-center p-4 border-b border-gray-200">
+    <i class="bi bi-calendar-heart text-3xl text-pink-500"></i>
+    <h1 class="text-2xl font-bold text-gray-700 ml-3">Agenda de Atendimentos</h1>
+  </div>
+
+  <div class="calendario-container flex-1 min-h-0 p-2 sm:p-4">
+    <full-calendar #meuCalendario [options]="calendarOptions" class="w-full h-full"></full-calendar>
+  </div>
+</div>
+
+
+<div *ngIf="isModalVisible" 
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300"
+     (click)="fecharModal()">
+  
+  <div (click)="$event.stopPropagation()" 
+       class="bg-gray-100 rounded-lg shadow-xl w-full max-w-2xl m-4 animate-fade-in-up">
+    
+    <app-form-agendamento
+      [agendamentoParaEditar]="agendamentoSelecionado"
+      [listaClientes]="listaClientes"
+      [listaServicos]="listaServicos"
+      [listaFuncionarias]="listaFuncionarias"
+      (save)="salvarAgendamento($event)"
+      (close)="fecharModal()"
+    ></app-form-agendamento>
+
+  </div>
+</div>
