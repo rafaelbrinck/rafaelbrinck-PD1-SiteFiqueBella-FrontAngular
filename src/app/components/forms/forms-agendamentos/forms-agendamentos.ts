@@ -3,6 +3,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Agendamento } from '../../../models/Agendamento';
 
 @Component({
   selector: 'app-form-agendamento',
@@ -18,16 +19,10 @@ export class FormAgendamentoComponent implements OnInit {
 
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
+  @Output() delete = new EventEmitter<Agendamento>();
 
   isEditMode = false;
-  agendamento = {
-    id: null,
-    start: '',
-    end: '',
-    cliente_id: null,
-    servico_id: null,
-    funcionaria_id: null,
-  };
+  agendamento: Agendamento = new Agendamento();
 
   dataAgendamento = '';
   horaInicio = '';
@@ -62,5 +57,9 @@ export class FormAgendamentoComponent implements OnInit {
 
   onCancel() {
     this.close.emit();
+  }
+
+  onDelete() {
+    this.delete.emit(this.agendamento);
   }
 }

@@ -7,22 +7,7 @@ import { Cliente } from '../models/cliente';
 import { Servico } from '../models/servicos';
 import { ClienteService } from './cliente-service';
 import { ServicosService } from './servicos-service';
-
-// A interface continua a mesma, garantindo o "contrato"
-export interface Agendamento {
-  id?: number | string;
-  title?: string;
-  start?: string;
-  end?: string;
-  backgroundColor?: string;
-  borderColor?: string;
-  textColor?: string;
-  extendedProps: {
-    cliente_id?: number | null;
-    funcionaria_id?: number | null;
-    servico_id?: number | null;
-  };
-}
+import { Agendamento } from '../models/Agendamento';
 
 @Injectable({
   providedIn: 'root',
@@ -117,6 +102,32 @@ export class AgendamentoService {
 
     this.listaAgendamentosSubject.next(agendamentosFicticios);
     return of(agendamentosFicticios).pipe(delay(500));
+  }
+
+  adicionarAgendamento(novoAgendamento: Agendamento) {
+    const agendamentosAtuais = this.listaAgendamentosSubject.getValue();
+    const novoId = agendamentosAtuais.length
+      ? Math.max(...agendamentosAtuais.map((ag) => (typeof ag.id === 'number' ? ag.id : 0))) + 1
+      : 1;
+    const cliente = this.listaClientes.find((c) => c.id === novoAgendamento.cliente_id);
+    const servico = this.listaServicos.find((s) => s.id === novoAgendamento.servico_id);
+    const agendamentoComDetalhes: Agendamento = {
+      ...novoAgendamento,
+      id: novoId,
+      title: `${servico?.nome} - ${cliente?.nome}`,
+      backgroundColor: servico?.cor || '#6b7280',
+      borderColor: servico?.cor || '#6b7280',
+      textColor: '#ffffff',
+    };
+    this.listaAgendamentosSubject.next([...agendamentosAtuais, agendamentoComDetalhes]);
+    console.log('Novo agendamento adicionado (simulação):', agendamentoComDetalhes);
+  }
+
+  deleteAgendamento(agendamentoId: number | string) {
+    const agendamentosAtuais = this.listaAgendamentosSubject.getValue();
+    const agendamentosAtualizados = agendamentosAtuais.filter((ag) => ag.id !== agendamentoId);
+    this.listaAgendamentosSubject.next(agendamentosAtualizados);
+    console.log(`Agendamento com ID ${agendamentoId} deletado (simulação).`);
   }
 
   private adicionarDias(
