@@ -4,6 +4,9 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Agendamento } from '../../../models/Agendamento';
+import { Cliente } from '../../../models/cliente';
+import { Servico } from '../../../models/servicos';
+import { Funcionaria } from '../../../models/funcionarias';
 
 @Component({
   selector: 'app-form-agendamento',
@@ -13,9 +16,9 @@ import { Agendamento } from '../../../models/Agendamento';
 })
 export class FormAgendamentoComponent implements OnInit {
   @Input() agendamentoParaEditar: any;
-  @Input() listaClientes: any[] = [];
-  @Input() listaServicos: any[] = [];
-  @Input() listaFuncionarias: any[] = [];
+  @Input() listaClientes: Cliente[] = [];
+  @Input() listaServicos: Servico[] = [];
+  @Input() listaFuncionarias: Funcionaria[] = [];
 
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();

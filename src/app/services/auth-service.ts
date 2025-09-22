@@ -46,7 +46,7 @@ export class AuthService {
   }
 
   private sessaoFake(): void {
-    const expirationTime = Date.now() + 60 * 60 * 1000; // 1 hora
+    const expirationTime = Date.now() + 60 * 60 * 1000;
     const expirateAt = Date.now() + expirationTime;
     const fakeToken = `fake-token-${Date.now()}`;
 

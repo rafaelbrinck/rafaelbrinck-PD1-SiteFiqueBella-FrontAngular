@@ -10,13 +10,16 @@ import { AuthService } from './services/auth-service';
   styleUrl: './app.css',
 })
 export class App implements OnInit {
-  protected readonly title = signal('my-project');
   expandNav = false;
   showNav = false;
 
   constructor(public authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
+    const validaSessao: boolean = this.authService.isAuthenticated();
+    if (!validaSessao) {
+      this.authService.logout();
+    }
     this.authService.logado$.subscribe((logado) => {
       if (!logado) {
         this.showNav = false;

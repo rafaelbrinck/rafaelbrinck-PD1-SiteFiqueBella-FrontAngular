@@ -103,7 +103,7 @@ export class Calendario implements OnInit, OnDestroy {
       slotLabelInterval: '00:30:00',
       slotMinTime: '08:00:00',
       slotMaxTime: '20:00:00',
-      hiddenDays: [0],
+
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',

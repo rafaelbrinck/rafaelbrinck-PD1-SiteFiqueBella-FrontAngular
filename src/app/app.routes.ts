@@ -35,4 +35,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/servicos/servicos').then((m) => m.Servicos),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'estatisticas',
+    loadComponent: () =>
+      import('./pages/estatisticas/estatisticas').then((m) => m.EstatisticasComponent),
+    canActivate: [AuthGuard],
+  },
 ];
