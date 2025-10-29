@@ -6,7 +6,7 @@ export class Agendamento {
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;
-  cliente_id?: number | null;
+  cliente_id?: string | null;
   funcionaria_id?: number | null;
   servico_id?: number | null;
 

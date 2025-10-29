@@ -12,6 +12,7 @@ import { ClienteService } from '../../services/cliente-service';
 import { ServicosService } from '../../services/servicos-service';
 import { FuncionariasService } from '../../services/funcionarias-service';
 import { Aniversariante } from '../../models/IAniversariante';
+import { Loader } from '../../services/loader';
 
 @Component({
   selector: 'app-home',
@@ -36,10 +37,12 @@ export class Home implements OnInit, OnDestroy {
     private agendamentoService: AgendamentoService,
     private clienteService: ClienteService,
     private servicosService: ServicosService,
-    private funcionariasService: FuncionariasService
+    private funcionariasService: FuncionariasService,
+    private loader: Loader
   ) {}
 
   ngOnInit(): void {
+    this.loader.carregarDados();
     combineLatest([
       this.agendamentoService.listaAgendamentos$,
       this.clienteService.listaClientes$,
@@ -72,8 +75,8 @@ export class Home implements OnInit, OnDestroy {
 
     this.agendamentosHoje = agendamentosDoDia.length;
     this.faturamentoPrevisto = agendamentosDoDia.reduce((total, ag) => {
-      const servico = servicos.find((s) => s.id === ag.extendedProps!.servico_id);
-      return total + (servico?.valor || 0);
+      const servico = servicos.find((s) => s.servico_id === ag.extendedProps!.servico_id);
+      return total + (servico?.preco || 0);
     }, 0);
     this.clientesNovos = 3;
 
@@ -83,9 +86,11 @@ export class Home implements OnInit, OnDestroy {
       .sort((a, b) => new Date(a.start!).getTime() - new Date(b.start!).getTime())
       .slice(0, 4)
       .map((ag) => {
-        const cliente = clientes.find((c) => c.id === ag.extendedProps!.cliente_id);
-        const servico = servicos.find((s) => s.id === ag.extendedProps!.servico_id);
-        const funcionaria = funcionarias.find((f) => f.id === ag.extendedProps!.funcionaria_id);
+        const cliente = clientes.find((c) => c.cliente_id === ag.extendedProps!.cliente_id);
+        const servico = servicos.find((s) => s.servico_id === ag.extendedProps!.servico_id);
+        const funcionaria = funcionarias.find(
+          (f) => f.funcionario_id === ag.extendedProps!.funcionaria_id
+        );
         const duracao = (new Date(ag.end!).getTime() - new Date(ag.start!).getTime()) / 60000;
 
         return {
@@ -103,8 +108,11 @@ export class Home implements OnInit, OnDestroy {
 
     this.aniversariantesDaSemana = clientes
       .map((cliente) => {
-        const [ano, mes, dia] = cliente.data_nascimento!.split('-').map(Number);
-        const niverEsteAno = new Date(hoje.getFullYear(), mes - 1, dia);
+        const dataNascimento = cliente.data_nascimento;
+        const mes = dataNascimento?.getMonth();
+        const dia = dataNascimento?.getDate();
+
+        const niverEsteAno = new Date(hoje.getFullYear(), mes!, dia);
         return { ...cliente, niverEsteAno };
       })
       .filter(

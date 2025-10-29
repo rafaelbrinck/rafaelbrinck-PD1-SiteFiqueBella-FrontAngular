@@ -1,7 +1,5 @@
-// src/app/services/auth.service.ts
-
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Enviroment } from '../enviroments/enviroment';
@@ -96,6 +94,16 @@ export class AuthService {
 
   public getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+  public getHeader(): null | HttpHeaders {
+    const token = this.getToken();
+    if (!token) {
+      console.warn('Token de autenticação não encontrado.');
+      return null;
+    }
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    return headers;
   }
 
   private isTokenValido(token: string): boolean {

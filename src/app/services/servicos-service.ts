@@ -1,41 +1,90 @@
 import { Injectable } from '@angular/core';
 import { Servico } from '../models/servicos';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, of, tap, throwError } from 'rxjs';
+import { Enviroment } from '../enviroments/enviroment';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from './auth-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ServicosService {
-  listaServicosMock: Servico[] = [
-    { id: 1, nome: 'Corte Feminino', valor: 85.0, cor: '#d946ef' }, // Fúcsia
-    { id: 2, nome: 'Corte Masculino', valor: 45.0, cor: '#3b82f6' }, // Azul
-    { id: 4, nome: 'Escova Progressiva', valor: 250.0, cor: '#22c55e' }, // Verde
-    { id: 5, nome: 'Coloração', valor: 120.0, cor: '#a16207' }, // Âmbar
-    { id: 6, nome: 'Manicure', valor: 30.0, cor: '#ec4899' }, // Rosa
-    { id: 9, nome: 'Limpeza de Pele', valor: 150.0, cor: '#f97316' }, // Laranja
-  ];
+  private apiUrl = `${Enviroment.apiUrl}/servicos`;
 
-  private listaServicosSubject = new BehaviorSubject<Servico[]>(this.listaServicosMock);
+  private listaServicosSubject = new BehaviorSubject<Servico[]>([]);
   public listaServicos$ = this.listaServicosSubject.asObservable();
 
-  salvarServico(servico: Servico) {
-    var lista = this.listaServicosSubject.getValue();
-    if (servico.id) {
-      const index = lista.findIndex((s) => s.id === servico.id);
-      if (index !== -1) {
-        lista[index] = servico;
-      }
-    } else {
-      servico.id = lista.length++;
-      lista.push(servico);
-    }
-    this.listaServicosSubject.next(lista);
+  constructor(private http: HttpClient, private authService: AuthService) {
+    this.carregarServicos().subscribe();
   }
 
-  deletar(id?: number) {
-    if (!id) return;
-    var lista = this.listaServicosSubject.getValue();
-    var deletar = lista.filter((s) => s.id !== id);
-    this.listaServicosSubject.next(deletar);
+  carregarServicos(): Observable<Servico[]> {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return of([]);
+    }
+    return this.http.get<Servico[]>(`${this.apiUrl}/list`, { headers: headers }).pipe(
+      tap((servicosRecebidos) => {
+        this.listaServicosSubject.next(servicosRecebidos);
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  cadastrar(servico: Servico): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    this.http.post<Servico>(`${this.apiUrl}/insert`, servico, { headers: headers }).subscribe({
+      next: (servicoCadastrado) => {
+        const listaAtual = this.listaServicosSubject.getValue();
+        this.listaServicosSubject.next([...listaAtual, servicoCadastrado]);
+      },
+      error: (error) => {
+        console.error('Erro ao cadastrar serviço:', error);
+      },
+    });
+    return true;
+  }
+
+  atualizar(servico: Servico): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    servico.updated_at = new Date();
+    this.http
+      .put<Servico>(`${this.apiUrl}/update/${servico.servico_id}`, servico, { headers: headers })
+      .subscribe({
+        next: (servicoAtualizado) => {
+          this.carregarServicos().subscribe();
+        },
+        error: (error) => {
+          console.error('Erro ao atualizar serviço:', error);
+        },
+      });
+    return true;
+  }
+
+  deletar(id?: string) {
+    const headers = this.authService.getHeader();
+    if (!headers || !id) {
+      return false;
+    }
+    this.http.delete(`${this.apiUrl}/remove/${id}`, { headers: headers }).subscribe({
+      next: () => {
+        this.carregarServicos().subscribe();
+      },
+      error: (error) => {
+        console.error('Erro ao deletar serviço:', error);
+      },
+    });
+    return true;
+  }
+
+  private handleError(error: any): Observable<never> {
+    console.error('Ocorreu um erro no ClienteService:', error);
+    return throwError(() => new Error('Algo deu errado no serviço de clientes.'));
   }
 }

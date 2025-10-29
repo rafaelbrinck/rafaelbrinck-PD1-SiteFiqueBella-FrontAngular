@@ -1,6 +1,10 @@
 export class Servico {
-  id?: number;
+  servico_id?: string;
   nome?: string;
-  valor?: number;
+  preco?: number;
+  duracao?: number;
   cor?: string;
+  ativo?: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }

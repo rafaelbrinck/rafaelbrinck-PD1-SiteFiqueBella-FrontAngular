@@ -3,10 +3,11 @@ import { ServicosService } from '../../services/servicos-service';
 import { Servico } from '../../models/servicos';
 import { CommonModule } from '@angular/common';
 import { FormServico } from '../forms/form-servico/form-servico';
+import { HoraFormatadaPipe } from '../../pipes/hora-formatada-pipe';
 
 @Component({
   selector: 'app-servicos',
-  imports: [CommonModule, FormServico],
+  imports: [CommonModule, FormServico, HoraFormatadaPipe],
   templateUrl: './servicos.html',
   styleUrl: './servicos.css',
 })
@@ -39,12 +40,17 @@ export class Servicos implements OnInit {
     this.servicoSelecionado = null;
   }
 
-  deletar(id: number) {
+  deletar(id: string) {
     this.servicosService.deletar(id);
   }
 
+  update(servico: Servico) {
+    this.servicosService.atualizar(servico);
+    this.fecharModal();
+  }
+
   salvarServico(servico: Servico) {
-    this.servicosService.salvarServico(servico);
+    this.servicosService.cadastrar(servico);
     this.fecharModal();
   }
 }

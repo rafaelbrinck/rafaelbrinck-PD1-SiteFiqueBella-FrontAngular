@@ -1,8 +1,6 @@
-// src/app/services/agendamento.service.ts
-
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs'; // Importe o 'of' do RxJS
-import { delay } from 'rxjs/operators'; // Opcional: para simular a demora da rede
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 import { Cliente } from '../models/cliente';
 import { Servico } from '../models/servicos';
 import { ClienteService } from './cliente-service';
@@ -26,7 +24,7 @@ export class AgendamentoService {
       id: 1,
       start: `${this.ano}-${this.mes}-${this.dia}T09:00:00`,
       end: `${this.ano}-${this.mes}-${this.dia}T11:00:00`,
-      cliente_id: 3,
+      cliente_id: '3',
       funcionaria_id: 1,
       servico_id: 5,
     },
@@ -34,7 +32,7 @@ export class AgendamentoService {
       id: 2,
       start: `${this.ano}-${this.mes}-${this.dia}T11:00:00`,
       end: `${this.ano}-${this.mes}-${this.dia}T12:00:00`,
-      cliente_id: 1,
+      cliente_id: '1',
       funcionaria_id: 2,
       servico_id: 6,
     },
@@ -42,7 +40,7 @@ export class AgendamentoService {
       id: 3,
       start: `${this.ano}-${this.mes}-${this.dia}T14:00:00`,
       end: `${this.ano}-${this.mes}-${this.dia}T17:00:00`,
-      cliente_id: 5,
+      cliente_id: '5',
       funcionaria_id: 1,
       servico_id: 4,
     },
@@ -50,7 +48,7 @@ export class AgendamentoService {
       id: 4,
       start: this.adicionarDias(this.hoje, 1, 0, 10, 0).toISOString().substring(0, 19),
       end: this.adicionarDias(this.hoje, 1, 0, 10, 45).toISOString().substring(0, 19),
-      cliente_id: 4,
+      cliente_id: '4',
       funcionaria_id: 3,
       servico_id: 2,
     },
@@ -58,7 +56,7 @@ export class AgendamentoService {
       id: 5,
       start: this.adicionarDias(this.hoje, -1, 0, 18, 0).toISOString().substring(0, 19),
       end: this.adicionarDias(this.hoje, -1, 1, 18, 0).toISOString().substring(0, 19),
-      cliente_id: 7,
+      cliente_id: '7',
       funcionaria_id: 4,
       servico_id: 9,
     },
@@ -82,8 +80,8 @@ export class AgendamentoService {
     console.log('Serviço foi chamado! Retornando dados FAKES (mock).');
 
     const agendamentosFicticios: Agendamento[] = this.agendamentosBase.map((ag) => {
-      const cliente = this.listaClientes.find((c) => c.id === ag.cliente_id);
-      const servico = this.listaServicos.find((s) => s.id === ag.servico_id);
+      const cliente = this.listaClientes.find((c) => c.cliente_id === ag.cliente_id);
+      const servico = this.listaServicos.find((s) => s.servico_id === ag.servico_id.toString());
 
       return {
         id: ag.id,
@@ -93,7 +91,7 @@ export class AgendamentoService {
         backgroundColor: servico?.cor || '#6b7280',
         borderColor: servico?.cor || '#6b7280',
         extendedProps: {
-          cliente_id: ag.cliente_id,
+          cliente_id: typeof ag.cliente_id === 'string' ? Number(ag.cliente_id) : ag.cliente_id,
           funcionaria_id: ag.funcionaria_id,
           servico_id: ag.servico_id,
         },
@@ -109,8 +107,8 @@ export class AgendamentoService {
     const novoId = agendamentosAtuais.length
       ? Math.max(...agendamentosAtuais.map((ag) => (typeof ag.id === 'number' ? ag.id : 0))) + 1
       : 1;
-    const cliente = this.listaClientes.find((c) => c.id === novoAgendamento.cliente_id);
-    const servico = this.listaServicos.find((s) => s.id === novoAgendamento.servico_id);
+    const cliente = this.listaClientes.find((c) => c.cliente_id === novoAgendamento.cliente_id);
+    const servico = this.listaServicos.find((s) => s.servico_id === novoAgendamento.servico_id);
     const agendamentoComDetalhes: Agendamento = {
       ...novoAgendamento,
       id: novoId,

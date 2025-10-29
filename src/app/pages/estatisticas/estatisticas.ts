@@ -51,11 +51,7 @@ export class EstatisticasComponent implements OnInit {
         },
       },
       datalabels: {
-        anchor: 'end',
-        align: 'top',
-        color: '#4b5563',
-        font: { weight: 'bold' },
-        formatter: (value) => this.moedaBR.format(value),
+        display: false,
       },
     },
   };

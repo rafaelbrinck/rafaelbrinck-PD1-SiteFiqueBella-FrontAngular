@@ -14,6 +14,7 @@ export class FormsFuncionarias implements OnInit {
   @Input() funcionariaParaEditar: any;
   @Input() listaDeServicos: Servico[] = [];
 
+  @Output() update = new EventEmitter<any>();
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
 
@@ -29,27 +30,30 @@ export class FormsFuncionarias implements OnInit {
     }
   }
 
-  onServicoChange(servicoId: number, event: Event) {
+  onServicoChange(servicoId: string, event: Event) {
     const isChecked = (event.target as HTMLInputElement).checked;
 
     if (isChecked) {
-      this.funcionaria.servicos_ids.push(servicoId);
+      this.funcionaria.especialidades.push(servicoId);
     } else {
-      const index = this.funcionaria.servicos_ids.indexOf(servicoId);
+      const index = this.funcionaria.especialidades.indexOf(servicoId);
       if (index > -1) {
-        this.funcionaria.servicos_ids.splice(index, 1);
+        this.funcionaria.especialidades.splice(index, 1);
       }
     }
   }
 
-  isServicoSelecionado(servicoId: number): boolean {
-    return this.funcionaria.servicos_ids.includes(servicoId);
+  isServicoSelecionado(servicoId: string): boolean {
+    return this.funcionaria.especialidades.includes(servicoId);
   }
 
   onSubmit() {
-    this.save.emit(this.funcionaria);
+    if (this.isEditMode) {
+      this.update.emit(this.funcionaria);
+    } else {
+      this.save.emit(this.funcionaria);
+    }
   }
-
   onCancel() {
     this.close.emit();
   }

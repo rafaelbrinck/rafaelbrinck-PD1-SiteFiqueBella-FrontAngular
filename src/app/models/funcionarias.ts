@@ -1,11 +1,13 @@
 import { Servico } from './servicos';
 
 export class Funcionaria {
-  id?: number;
+  funcionario_id?: string;
   nome?: string;
   sobrenome?: string;
   email?: string;
   telefone?: string;
-  servicos_ids: number[] = [];
-  servicos?: Servico[];
+  especialidades: string[] = [];
+  servicos?: Servico[] = [];
+  created_at?: Date;
+  updated_at?: Date;
 }

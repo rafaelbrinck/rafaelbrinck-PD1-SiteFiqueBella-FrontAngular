@@ -1,18 +1,21 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, output, Output } from '@angular/core';
 import { Cliente } from '../../../models/cliente';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { provideNgxMask } from 'ngx-mask';
 @Component({
   selector: 'app-form-cliente',
-  imports: [CommonModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  providers: [provideNgxMask()],
   templateUrl: './form-cliente.html',
-  styleUrl: './form-cliente.css',
+  styleUrls: ['./form-cliente.css'],
 })
 export class FormCliente implements OnInit {
   @Input() clienteParaEditar: any;
 
   @Output() save = new EventEmitter<Cliente>();
+  @Output() update = new EventEmitter<Cliente>();
   @Output() close = new EventEmitter<void>();
 
   isEditMode = false;
@@ -28,6 +31,10 @@ export class FormCliente implements OnInit {
   }
 
   onSubmit() {
+    if (this.isEditMode) {
+      this.update.emit(this.cliente);
+      return;
+    }
     this.save.emit(this.cliente);
   }
 

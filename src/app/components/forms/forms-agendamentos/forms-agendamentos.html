@@ -14,7 +14,7 @@
         <label for="cliente" class="block text-sm font-semibold text-gray-700 mb-1">Cliente</label>
         <select id="cliente" name="cliente" [(ngModel)]="agendamento.cliente_id" required class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
           <option [ngValue]="null" disabled>Selecione um cliente</option>
-          <option *ngFor="let cliente of listaClientes" [value]="cliente.id">{{cliente.nome}} {{cliente.sobrenome}}</option>
+          <option *ngFor="let cliente of listaClientes" [value]="cliente.cliente_id">{{cliente.nome}} {{cliente.sobrenome}}</option>
         </select>
       </div>
 
@@ -22,7 +22,7 @@
         <label for="servico" class="block text-sm font-semibold text-gray-700 mb-1">Serviço</label>
         <select id="servico" name="servico" [(ngModel)]="agendamento.servico_id" required class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
           <option [ngValue]="null" disabled>Selecione um serviço</option>
-          <option *ngFor="let servico of listaServicos" [value]="servico.id">{{servico.nome}}</option>
+          <option *ngFor="let servico of listaServicos" [value]="servico.servico_id">{{servico.nome}}</option>
         </select>
       </div>
 
@@ -30,7 +30,7 @@
         <label for="funcionaria" class="block text-sm font-semibold text-gray-700 mb-1">Funcionária</label>
         <select id="funcionaria" name="funcionaria" [(ngModel)]="agendamento.funcionaria_id" required class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
           <option [ngValue]="null" disabled>Selecione uma funcionária</option>
-          <option *ngFor="let func of listaFuncionarias" [value]="func.id">{{func.nome}} {{func.sobrenome}}</option>
+          <option *ngFor="let func of listaFuncionarias" [value]="func.funcionario_id">{{func.nome}} {{func.sobrenome}}</option>
         </select>
       </div>
       

@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ClienteService } from '../../services/cliente-service';
-import { Cliente } from '../../models/cliente';
 import { CommonModule } from '@angular/common';
 import { FormCliente } from '../forms/form-cliente/form-cliente';
+import { Cliente } from '../../models/cliente';
 
 @Component({
   selector: 'app-clientes',
@@ -15,7 +15,9 @@ export class Clientes implements OnInit {
   isModalVisible = false;
   clienteSelecionado: Cliente | null = null;
 
-  constructor(private clienteService: ClienteService) {}
+  constructor(private clienteService: ClienteService) {
+    this.clienteService.carregarClientes().subscribe();
+  }
 
   ngOnInit(): void {
     this.clienteService.listaClientes$.subscribe((clientes) => {
@@ -39,10 +41,14 @@ export class Clientes implements OnInit {
   }
 
   salvarCliente(cliente: Cliente) {
-    this.clienteService.salvarCliente(cliente);
+    this.clienteService.cadastrar(cliente);
     this.fecharModal();
   }
-  deletar(id: number) {
+  atualizarCliente(cliente: Cliente) {
+    this.clienteService.atualizar(cliente);
+    this.fecharModal();
+  }
+  deletar(id: string) {
     this.clienteService.deletar(id);
   }
 }

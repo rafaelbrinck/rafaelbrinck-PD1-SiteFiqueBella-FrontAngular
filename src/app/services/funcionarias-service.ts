@@ -1,67 +1,113 @@
 import { Injectable } from '@angular/core';
 import { Funcionaria } from '../models/funcionarias';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, of, tap, throwError } from 'rxjs';
 import { ServicosService } from './servicos-service';
+import { Enviroment } from '../enviroments/enviroment';
+import { AuthService } from './auth-service';
+import { HttpClient } from '@angular/common/http';
+import { Servico } from '../models/servicos';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FuncionariasService {
-  listaFuncionariasMock = [
-    {
-      id: 1,
-      nome: 'Juliana',
-      sobrenome: 'Almeida',
-      email: 'juliana.a@fiquebella.com',
-      telefone: '(51) 98811-2233',
-      servicos_ids: [1, 4, 5],
-    },
-    {
-      id: 2,
-      nome: 'Beatriz',
-      sobrenome: 'Gonçalves',
-      email: 'beatriz.g@fiquebella.com',
-      telefone: '(51) 99922-3344',
-      servicos_ids: [6, 9],
-    },
-    {
-      id: 3,
-      nome: 'Roberto',
-      sobrenome: 'Mendes',
-      email: 'roberto.m@fiquebella.com',
-      telefone: '(51) 98765-9876',
-      servicos_ids: [2],
-    },
-    {
-      id: 4,
-      nome: 'Vanessa',
-      sobrenome: 'Lima',
-      email: 'vanessa.l@fiquebella.com',
-      telefone: '(51) 99123-1234',
-      servicos_ids: [4, 9, 1],
-    },
-  ];
+  private apiUrl = `${Enviroment.apiUrl}/funcionarios`;
 
-  private listaFuncionariasSubject = new BehaviorSubject<Funcionaria[]>(this.listaFuncionariasMock);
+  private listaFuncionariasSubject = new BehaviorSubject<Funcionaria[]>([]);
   public listaFuncionarias$ = this.listaFuncionariasSubject.asObservable();
 
-  deletarFuncionaria(id: number) {
-    var lista = this.listaFuncionariasSubject.getValue();
-    var deletar = lista.filter((f) => f.id !== id);
-    this.listaFuncionariasSubject.next(deletar);
+  constructor(
+    private authService: AuthService,
+    private servicosService: ServicosService,
+    private http: HttpClient
+  ) {
+    this.carregarFuncionarias().subscribe();
   }
 
-  salvarFuncionaria(funcionaria: Funcionaria) {
-    const lista = this.listaFuncionariasSubject.getValue();
-    if (funcionaria.id) {
-      const index = lista.findIndex((f) => f.id === funcionaria.id);
-      if (index !== -1) {
-        lista[index] = funcionaria;
-      }
-    } else {
-      funcionaria.id = lista.length++;
-      lista.push(funcionaria);
+  carregarFuncionarias(): Observable<Funcionaria[]> {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return of([]);
     }
-    this.listaFuncionariasSubject.next(lista);
+    return this.http.get<Funcionaria[]>(`${this.apiUrl}/list`, { headers: headers }).pipe(
+      tap((funcionariasRecebidas) => {
+        funcionariasRecebidas.forEach((funcionaria) => {
+          let listaServicos: Servico[] = [];
+          this.servicosService.listaServicos$.subscribe((listaServicos) => {
+            listaServicos = listaServicos;
+          });
+          let servicosFuncionaria: Servico[] = [];
+          funcionaria.especialidades.forEach((id) => {
+            const servico = listaServicos.find((s) => s.servico_id === id);
+            servicosFuncionaria.push(servico!);
+          });
+        });
+        this.listaFuncionariasSubject.next(funcionariasRecebidas);
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  deletarFuncionaria(id: string) {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return;
+    }
+    this.http.delete(`${this.apiUrl}/remove/${id}`, { headers: headers }).subscribe({
+      next: () => {
+        const listaAtual = this.listaFuncionariasSubject.getValue();
+        const listaAtualizada = listaAtual.filter((f) => f.funcionario_id !== id);
+        this.listaFuncionariasSubject.next(listaAtualizada);
+      },
+      error: (error) => {
+        console.error('Erro ao deletar funcionária:', error);
+      },
+    });
+    return;
+  }
+
+  salvarFuncionaria(funcionaria: Funcionaria): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    this.http
+      .post<Funcionaria>(`${this.apiUrl}/insert`, funcionaria, { headers: headers })
+      .subscribe({
+        next: (funcionariaCadastrada) => {
+          const listaAtual = this.listaFuncionariasSubject.getValue();
+          this.listaFuncionariasSubject.next([...listaAtual, funcionariaCadastrada]);
+        },
+        error: (error) => {
+          console.error('Erro ao cadastrar funcionária:', error);
+        },
+      });
+    return true;
+  }
+
+  update(funcionaria: Funcionaria): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    funcionaria.updated_at = new Date();
+    this.http
+      .put<Funcionaria>(`${this.apiUrl}/update/${funcionaria.funcionario_id}`, funcionaria, {
+        headers: headers,
+      })
+      .subscribe({
+        next: (funcionariaAtualizada) => {
+          this.carregarFuncionarias().subscribe();
+        },
+        error: (error) => {
+          console.error('Erro ao atualizar funcionária:', error);
+        },
+      });
+    return true;
+  }
+
+  private handleError(error: any): Observable<never> {
+    console.error('Ocorreu um erro no ClienteService:', error);
+    return throwError(() => new Error('Algo deu errado no serviço de clientes.'));
   }
 }

@@ -20,11 +20,18 @@
         <label for="preco" class="block text-sm font-semibold text-gray-700 mb-1">Preço (R$)</label>
         <div class="relative">
           <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">R$</span>
-          <input type="number" id="valor" name="valor" [(ngModel)]="servico.valor" required
+          <input type="number" id="preco" name="preco" [(ngModel)]="servico.preco" required
                 step="0.01" placeholder="Ex: 250.00"
                  class="w-full pt-3 pb-3 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
         </div>
+        
       </div>
+        <div>
+          <label for="duracao" class="block text-sm font-semibold text-gray-700 mb-1">Duração (minutos)</label>
+          <input type="number" id="duracao" name="duracao" [(ngModel)]="servico.duracao" required 
+                 min="15" step="15" placeholder="Ex: 60"
+                 class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
+        </div>
     </div>
 
     <div class="mt-8 flex justify-end gap-4">

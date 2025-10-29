@@ -12,6 +12,7 @@ import { Servico } from '../../../models/servicos';
 export class FormServico implements OnInit {
   @Input() servicoParaEditar: Servico | null = null;
 
+  @Output() update = new EventEmitter<Servico>();
   @Output() save = new EventEmitter<Servico>();
   @Output() close = new EventEmitter<void>();
 
@@ -29,7 +30,11 @@ export class FormServico implements OnInit {
   }
 
   onSubmit() {
-    this.save.emit(this.servico);
+    if (this.isEditMode) {
+      this.update.emit(this.servico);
+    } else {
+      this.save.emit(this.servico);
+    }
   }
 
   onCancel() {

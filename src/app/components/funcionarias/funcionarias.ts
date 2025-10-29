@@ -33,12 +33,12 @@ export class Funcionarias implements OnInit {
     });
   }
 
-  getServicoNome(servicoId: number): string {
-    const servico = this.listaServicos.find((s) => s.id === servicoId);
+  getServicoNome(servicoId: string): string {
+    const servico = this.listaServicos.find((s) => s.servico_id === servicoId);
     return servico ? servico.nome! : 'Serviço não encontrado';
   }
 
-  deletar(id: number) {
+  deletar(id: string) {
     this.funcionariasService.deletarFuncionaria(id);
   }
 
@@ -59,6 +59,10 @@ export class Funcionarias implements OnInit {
 
   salvarFuncionaria(funcionaria: Funcionaria) {
     this.funcionariasService.salvarFuncionaria(funcionaria);
+    this.fecharModal();
+  }
+  update(funcionaria: Funcionaria) {
+    this.funcionariasService.update(funcionaria);
     this.fecharModal();
   }
 }
