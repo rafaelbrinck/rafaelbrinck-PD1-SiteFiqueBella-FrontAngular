@@ -1,0 +1,6 @@
+#btn {
+  background-color: var(--base-color);
+}
+#btn:hover {
+  background-color: var(--secundary-color);
+}

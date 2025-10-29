@@ -12,5 +12,8 @@ input {
   max-width: 500px;
 }
 button {
-  background-color: #5f254b;
+  background-color: var(--base-color);
+}
+button:hover {
+  background-color: var(--secundary-color);
 }

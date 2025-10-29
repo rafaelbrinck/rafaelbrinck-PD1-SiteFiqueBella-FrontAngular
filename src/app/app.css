@@ -4,3 +4,6 @@ nav a {
 .titulo {
   font-family: 'Julius Sans One', sans-serif;
 }
+nav {
+  background-color: var(--base-color);
+}

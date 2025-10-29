@@ -1,6 +1,6 @@
 // src/app/pages/calendario/calendario.ts
 
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy, input, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, DateSelectArg, EventClickArg, EventInput } from '@fullcalendar/core';
@@ -31,6 +31,7 @@ import { ServicosService } from '../../services/servicos-service';
 })
 export class Calendario implements OnInit, OnDestroy {
   @ViewChild('meuCalendario') calendarComponent!: FullCalendarComponent;
+  @Input() ativaCad: boolean = false;
 
   // --- LÓGICA DO MODAL ---
   isModalVisible = false;
@@ -61,6 +62,10 @@ export class Calendario implements OnInit, OnDestroy {
     // Lógica Mobile-First para a visão inicial
     if (window.innerWidth < 768) {
       this.initialView = 'timeGridDay';
+    }
+
+    if (this.ativaCad) {
+      this.isModalVisible = true;
     }
 
     // Inscreve-se no fluxo de agendamentos do serviço
