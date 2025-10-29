@@ -11,3 +11,6 @@ input {
 .login-box {
   max-width: 500px;
 }
+button {
+  background-color: #5f254b;
+}
