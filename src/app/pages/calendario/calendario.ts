@@ -4,13 +4,13 @@ import { Component, ViewChild, OnInit, OnDestroy, input, Input } from '@angular/
 import { CommonModule } from '@angular/common';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, DateSelectArg, EventClickArg, EventInput } from '@fullcalendar/core';
-import { DateClickArg } from '@fullcalendar/interaction';
+import { DateClickArg, EventResizeDoneArg } from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
-import { Agendamento } from '../../models/Agendamento';
+import { Agendamento, AgendamentoDB, StatusEnum } from '../../models/Agendamento';
 import { Cliente } from '../../models/cliente';
 import { Servico } from '../../models/servicos';
 import { Funcionaria } from '../../models/funcionarias';
@@ -21,11 +21,12 @@ import { AgendamentoService } from '../../services/agendamento-service';
 import { ClienteService } from '../../services/cliente-service';
 import { FuncionariasService } from '../../services/funcionarias-service';
 import { ServicosService } from '../../services/servicos-service';
+import { DetalheAgendamento } from '../../components/datalhes/detalhe-agendamento/detalhe-agendamento';
 
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule, FormAgendamentoComponent],
+  imports: [CommonModule, FullCalendarModule, FormAgendamentoComponent, DetalheAgendamento],
   templateUrl: './calendario.html',
   styleUrls: ['./calendario.css'],
 })
@@ -35,20 +36,23 @@ export class Calendario implements OnInit, OnDestroy {
 
   // --- LÓGICA DO MODAL ---
   isModalVisible = false;
+  isModalDetalhesVisible = false;
   agendamentoSelecionado: any | null = null;
 
   // --- DADOS PARA OS DROPDOWNS DO FORMULÁRIO ---
   listaClientes: Cliente[] = [];
   listaServicos: Servico[] = [];
   listaFuncionarias: Funcionaria[] = [];
+  listaAgendamentos: Agendamento[] = [];
 
-  // A propriedade de eventos agora é um array simples que será atualizado reativamente
-  listaAgendamentos: EventInput[] = [];
+  // DADOS PARA O MODAL DE DETALHES
+  clienteSelecionado: Cliente | null = null;
+  servicoSelecionado: Servico | null = null;
+  funcionariaSelecionada: Funcionaria | null = null;
 
-  private destroy$ = new Subject<void>(); // Para gerenciar o cancelamento de inscrições
+  private destroy$ = new Subject<void>();
   initialView: 'timeGridWeek' | 'timeGridDay' = 'timeGridWeek';
 
-  // Declara calendarOptions, que será inicializado no ngOnInit
   calendarOptions!: CalendarOptions;
 
   constructor(
@@ -59,27 +63,22 @@ export class Calendario implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.agendamentoService.listaAgendamentos$.subscribe((agendamentos) => {
+      if (agendamentos.length <= 0) {
+        this.agendamentoService.getAgendamentos().subscribe();
+      }
+      this.listaAgendamentos = agendamentos;
+      // Atualiza os eventos do calendário
+      this.calendarOptions.events = this.listaAgendamentos;
+    });
     // Lógica Mobile-First para a visão inicial
     if (window.innerWidth < 768) {
       this.initialView = 'timeGridDay';
     }
 
-    if (this.ativaCad) {
-      this.isModalVisible = true;
-    }
-
-    // Inscreve-se no fluxo de agendamentos do serviço
-    this.agendamentoService.listaAgendamentos$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((agendamentos) => {
-        // Converte o ID para string para o FullCalendar e atualiza a lista local
-        this.listaAgendamentos = agendamentos.map((ag) => ({ ...ag, id: String(ag.id) }));
-        // Se as opções do calendário já existirem, atualiza os eventos
-        if (this.calendarOptions) {
-          this.calendarOptions.events = this.listaAgendamentos;
-        }
-      });
-
+    this.agendamentoService.showModal$.subscribe((show) => {
+      this.isModalVisible = show;
+    });
     // Inscreve-se nos outros serviços para preencher os dropdowns do formulário
     this.servicosService.listaServicos$
       .pipe(takeUntil(this.destroy$))
@@ -145,8 +144,8 @@ export class Calendario implements OnInit, OnDestroy {
           html: `<div class="fc-dayheader-container"><span class="fc-dayheader-date">${formattedDate}</span><span class="fc-dayheader-day">${dayOfWeek}</span></div>`,
         };
       },
-      // A propriedade 'events' agora aponta para o nosso array local reativo
       events: this.listaAgendamentos,
+      // eventResize: this.handleEventResize.bind(this),
       eventClick: this.handleEventClick.bind(this),
       dateClick: this.handleDateClick.bind(this),
       select: this.handleSelect.bind(this),
@@ -154,12 +153,24 @@ export class Calendario implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Cancela todas as inscrições quando o componente é destruído para evitar vazamentos de memória
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   // --- MÉTODOS DE CONTROLE DO MODAL ---
+  abrirModalExterno() {
+    this.agendamentoService.toogleModal();
+  }
+  abrirModalParaNovoPadrao() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0);
+    this.abrirModalParaNovo(
+      start.toISOString().substring(0, 16),
+      end.toISOString().substring(0, 16)
+    );
+  }
+
   abrirModalParaNovo(start: string, end: string) {
     this.agendamentoSelecionado = {
       start: start,
@@ -183,11 +194,16 @@ export class Calendario implements OnInit, OnDestroy {
   }
 
   fecharModal() {
-    this.isModalVisible = false;
+    this.agendamentoService.toogleModal();
     this.agendamentoSelecionado = null;
   }
 
-  salvarAgendamento(agendamento: Agendamento) {
+  salvarAgendamento(agendamento: AgendamentoDB) {
+    if (agendamento.agendamento_id) {
+      this.agendamentoService.atualizarAgendamento(agendamento);
+      this.fecharModal();
+      return;
+    }
     this.agendamentoService.adicionarAgendamento(agendamento);
     this.fecharModal();
   }
@@ -204,7 +220,28 @@ export class Calendario implements OnInit, OnDestroy {
 
   // --- HANDLERS DE INTERAÇÃO COM O CALENDÁRIO ---
   handleEventClick(clickInfo: EventClickArg) {
-    this.abrirModalParaEditar(clickInfo);
+    // Pega os IDs do evento
+    const props = clickInfo.event.extendedProps;
+
+    // Encontra os objetos completos nas suas listas
+    this.clienteSelecionado =
+      this.listaClientes.find((c) => c.cliente_id === props['cliente_id']) || null;
+    this.servicoSelecionado =
+      this.listaServicos.find((s) => s.servico_id === props['servico_id']) || null;
+    this.funcionariaSelecionada =
+      this.listaFuncionarias.find((f) => f.funcionario_id === props['funcionaria_id']) || null;
+
+    // Define o agendamento
+    this.agendamentoSelecionado = {
+      id: clickInfo.event.id,
+      start: clickInfo.event.startStr,
+      end: clickInfo.event.endStr,
+      title: clickInfo.event.title,
+      extendedProps: props,
+    };
+
+    // Abre o modal de DETALHES
+    this.isModalDetalhesVisible = true;
   }
 
   handleDateClick(dateInfo: DateClickArg) {
@@ -228,4 +265,64 @@ export class Calendario implements OnInit, OnDestroy {
     const calendarApi = this.calendarComponent.getApi();
     calendarApi.unselect();
   }
+
+  fecharTodosModais() {
+    this.isModalDetalhesVisible = false;
+    this.isModalVisible = false;
+    this.agendamentoSelecionado = null;
+  }
+  // --- Métodos chamados pelos @Outputs do modal de detalhes ---
+
+  // Quando o usuário clica em "Excluir" no modal de detalhes
+  onTriggerDelete() {
+    this.deletarAgendamento(this.agendamentoSelecionado);
+    this.fecharTodosModais();
+  }
+
+  onTriggerEdit() {
+    this.isModalDetalhesVisible = false;
+    this.isModalVisible = true;
+  }
+
+  onTriggerComplete() {
+    const agendamentoFinalizado = {
+      agendamento_id: this.agendamentoSelecionado.id,
+      cliente_id: this.agendamentoSelecionado.extendedProps['cliente_id'],
+      funcionaria_id: this.agendamentoSelecionado.extendedProps['funcionaria_id'],
+      servico_id: this.agendamentoSelecionado.extendedProps['servico_id'],
+      data_hora_inicio: new Date(this.agendamentoSelecionado.start),
+      data_hora_fim: new Date(this.agendamentoSelecionado.end),
+      status: StatusEnum.CONCLUIDO,
+    };
+
+    this.agendamentoService.atualizarAgendamento(agendamentoFinalizado);
+    this.fecharTodosModais();
+  }
+
+  // handleEventResize(resizeInfo: EventResizeDoneArg) {
+  //   console.log('Evento redimensionado:', resizeInfo.event.id);
+
+  //   // 1. Constrói o objeto AgendamentoDB com os novos horários
+  //   //    (Certifique-se que o tipo do seu agendamento_id bate com o do evento)
+  //   const agendamentoAtualizado: AgendamentoDB = {
+  //     agendamento_id: resizeInfo.event.id as any, // Converte a string do ID se necessário
+  //     data_hora_inicio: new Date(resizeInfo.event.startStr), // A nova data/hora de início
+  //     data_hora_fim: new Date(resizeInfo.event.endStr), // A nova data/hora de fim
+
+  //     // Mantém os dados relacionados
+  //     cliente_id: resizeInfo.event.extendedProps['cliente_id'],
+  //     servico_id: resizeInfo.event.extendedProps['servico_id'],
+  //     funcionaria_id: resizeInfo.event.extendedProps['funcionaria_id'],
+  //   };
+
+  //   // 2. Chama o serviço para atualizar no banco
+  //   const result = this.agendamentoService.atualizarAgendamento(agendamentoAtualizado);
+
+  //   if (result) {
+  //     console.log('Agendamento atualizado com sucesso:', agendamentoAtualizado);
+  //   } else {
+  //     console.error('Falha ao atualizar o agendamento:', agendamentoAtualizado);
+  //     resizeInfo.revert();
+  //   }
+  // }
 }

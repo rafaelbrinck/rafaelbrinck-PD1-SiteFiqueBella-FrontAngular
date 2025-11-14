@@ -17,20 +17,37 @@
           <option *ngFor="let cliente of listaClientes" [value]="cliente.cliente_id">{{cliente.nome}} {{cliente.sobrenome}}</option>
         </select>
       </div>
-
+      
       <div>
-        <label for="servico" class="block text-sm font-semibold text-gray-700 mb-1">Serviço</label>
-        <select id="servico" name="servico" [(ngModel)]="agendamento.servico_id" required class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
-          <option [ngValue]="null" disabled>Selecione um serviço</option>
-          <option *ngFor="let servico of listaServicos" [value]="servico.servico_id">{{servico.nome}}</option>
+        <label for="funcionaria" class="block text-sm font-semibold text-gray-700 mb-1">Funcionária</label>
+        <select id="funcionaria" 
+                name="funcionaria" 
+                (ngModelChange)="filtroFuncionaria($event)" 
+                [(ngModel)]="agendamento.funcionaria_id" 
+                required 
+                class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
+
+          <option [ngValue]="null" disabled>Selecione uma funcionária</option>
+
+          <option *ngFor="let func of listaFuncionarias" [ngValue]="func.funcionario_id">
+            {{func.nome}} {{func.sobrenome}}
+          </option>
         </select>
       </div>
 
       <div>
-        <label for="funcionaria" class="block text-sm font-semibold text-gray-700 mb-1">Funcionária</label>
-        <select id="funcionaria" name="funcionaria" [(ngModel)]="agendamento.funcionaria_id" required class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
-          <option [ngValue]="null" disabled>Selecione uma funcionária</option>
-          <option *ngFor="let func of listaFuncionarias" [value]="func.funcionario_id">{{func.nome}} {{func.sobrenome}}</option>
+        <label for="servico" class="block text-sm font-semibold text-gray-700 mb-1">Serviço</label>
+        <select id="servico" 
+                name="servico" 
+                [(ngModel)]="agendamento.servico_id"
+                (ngModelChange)="adaptarHoraPorServico($event);"
+                [disabled]="servicosFiltrados.length === 0"
+                required 
+                class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition disabled:bg-gray-200">
+          <option [ngValue]="null" disabled>
+            {{ agendamento.funcionaria_id ? 'Selecione um serviço' : 'Selecione uma funcionária primeiro' }}
+          </option>
+          <option *ngFor="let servico of servicosFiltrados" [ngValue]="servico.servico_id">{{ servico.nome }}</option>
         </select>
       </div>
       

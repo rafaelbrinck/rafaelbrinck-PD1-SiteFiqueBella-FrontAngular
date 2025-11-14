@@ -132,6 +132,7 @@ export class Home implements OnInit, OnDestroy {
   }
 
   novoAgendamento(): void {
+    this.agendamentoService.toogleModal();
     this.router.navigate(['/agendamentos']);
   }
 

@@ -6,3 +6,10 @@
   --base-color: #9b3e7a;
   --secundary-color: #5f254b;
 }
+
+#btn {
+  background-color: var(--base-color);
+}
+#btn:hover {
+  background-color: var(--secundary-color);
+}

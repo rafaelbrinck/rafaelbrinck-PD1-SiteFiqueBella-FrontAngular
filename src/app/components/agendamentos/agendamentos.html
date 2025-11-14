@@ -1,0 +1,101 @@
+<div class="flex flex-col h-full pt-2 pl-4 pr-4 pb-11 lg:pb-0">
+  
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+    <div class="flex items-center">
+      <i class="bi bi-calendar-heart text-3xl text-pink-500"></i>
+      <h1 class="text-2xl font-bold text-gray-700 ml-3">Histórico de Agendamentos</h1>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div class="relative">
+        <input type="text" placeholder="Buscar por cliente..." class="w-full sm:w-64 p-2 pl-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition">
+        <i class="bi bi-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 bg-white rounded-lg shadow-md overflow-auto">
+    
+    <div class="block md:hidden">
+      <div *ngIf="listaAgendamentos.length > 0; else noAgendamentos">
+        <div *ngFor="let ag of listaAgendamentos; let isLast = last" class="flex justify-between p-4 border-gray-200" [ngClass]="{'border-b': !isLast}">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-bold text-lg text-gray-800">{{ getClienteNome(ag.cliente_id!) }} - {{ getServicoNome(ag.servico_id!) }}</p>
+              
+              <div class="mt-2 text-sm text-gray-600 space-y-1">
+                <p class="flex items-center gap-2">
+                  <i class="bi bi-calendar-event"></i>
+                  <span>{{ ag.data_hora_inicio | date:'dd/MM/yyyy' }}</span>
+                </p>
+                <p class="flex items-center gap-2">
+                  <i class="bi bi-clock-fill"></i>
+                  <span>{{ ag.data_hora_inicio | date:'HH:mm' }} - {{ ag.data_hora_fim | date:'HH:mm' }}</span>
+                </p>
+                <p class="flex items-center gap-2">
+                  <i class="bi bi-person-badge"></i>
+                  <span>{{ getFuncionariaNome(ag.funcionaria_id!) }}</span>
+                </p>
+              </div>
+            </div>
+            
+          </div>
+          <div>
+            <div class="flex gap-4 mt-4 text-xl">
+              <button (click)="abrirModalParaEditar(ag)" title="Editar Agendamento" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
+              <button (click)="deletar(ag.agendamento_id!)" title="Excluir Agendamento" class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden md:block">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="p-4 font-semibold text-gray-600">Cliente</th>
+            <th class="p-4 font-semibold text-gray-600">Serviço</th>
+            <th class="p-4 font-semibold text-gray-600">Profissional</th>
+            <th class="p-4 font-semibold text-gray-600">Data</th>
+            <th class="p-4 font-semibold text-gray-600">Horário</th>
+            <th class="p-4 font-semibold text-gray-600 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody *ngIf="listaAgendamentos.length > 0; else noAgendamentos">
+          <tr *ngFor="let ag of listaAgendamentos" class="hover:bg-pink-50 transition-colors">
+            
+            <td class="p-4 border-b border-gray-200 font-medium text-gray-800">
+              {{ getClienteNome(ag.cliente_id!) }}
+            </td>
+            <td class="p-4 border-b border-gray-200 text-gray-600">
+              {{ getServicoNome(ag.servico_id!) }}
+            </td>
+            <td class="p-4 border-b border-gray-200 text-gray-600">
+              {{ getFuncionariaNome(ag.funcionaria_id!) }}
+            </td>
+            <td class="p-4 border-b border-gray-200 text-gray-600">
+              {{ ag.data_hora_inicio | date:'dd/MM/yyyy' }}
+            </td>
+            <td class="p-4 border-b border-gray-200 text-gray-600">
+              {{ ag.data_hora_inicio | date:'HH:mm' }} - {{ ag.data_hora_fim | date:'HH:mm' }}
+            </td>
+            
+            <td class="p-4 border-b border-gray-200">
+              <div class="flex gap-4 justify-center text-xl">
+                <button (click)="abrirModalParaEditar(ag)" title="Editar Agendamento" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
+                <button (click)="deletar(ag.agendamento_id!)" title="Excluir Agendamento" class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noAgendamentos>
+      <div class="text-center p-10 text-gray-500">
+        <i class="bi bi-calendar-x text-4xl mb-2"></i>
+        <p>Nenhum agendamento encontrado.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

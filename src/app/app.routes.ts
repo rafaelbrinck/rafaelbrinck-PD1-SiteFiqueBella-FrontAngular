@@ -41,4 +41,10 @@ export const routes: Routes = [
       import('./pages/estatisticas/estatisticas').then((m) => m.EstatisticasComponent),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'agendamentos-lista',
+    loadComponent: () =>
+      import('./components/agendamentos/agendamentos').then((m) => m.Agendamentos),
+    canActivate: [AuthGuard],
+  },
 ];

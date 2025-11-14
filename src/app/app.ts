@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth-service';
+import { Loader } from './services/loader';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,7 @@ export class App implements OnInit {
   expandNav = false;
   showNav = false;
 
-  constructor(public authService: AuthService, private router: Router) {}
+  constructor(public authService: AuthService, private router: Router, private loader: Loader) {}
 
   ngOnInit(): void {
     const validaSessao: boolean = this.authService.isAuthenticated();
@@ -25,6 +26,7 @@ export class App implements OnInit {
         this.showNav = false;
       } else {
         this.showNav = true;
+        this.loader.carregarDados();
       }
     });
   }

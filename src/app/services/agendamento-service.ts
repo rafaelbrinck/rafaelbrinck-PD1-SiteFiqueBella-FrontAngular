@@ -1,143 +1,148 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, tap } from 'rxjs/operators';
 import { Cliente } from '../models/cliente';
 import { Servico } from '../models/servicos';
 import { ClienteService } from './cliente-service';
 import { ServicosService } from './servicos-service';
-import { Agendamento } from '../models/Agendamento';
+import { Agendamento, AgendamentoDB } from '../models/Agendamento';
+import { Enviroment } from '../enviroments/enviroment';
+import { Funcionaria } from '../models/funcionarias';
+import { FuncionariasService } from './funcionarias-service';
+import { AuthService } from './auth-service';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AgendamentoService {
+  apiUrl = `${Enviroment.apiUrl}/agendamentos`;
+
   listaClientes: Cliente[] = [];
   listaServicos: Servico[] = [];
+  listaFuncionarias: Funcionaria[] = [];
 
-  hoje: Date = new Date();
-  ano: number = this.hoje.getFullYear();
-  mes: string = (this.hoje.getMonth() + 1).toString().padStart(2, '0');
-  dia: string = this.hoje.getDate().toString().padStart(2, '0');
-
-  agendamentosBase = [
-    {
-      id: 1,
-      start: `${this.ano}-${this.mes}-${this.dia}T09:00:00`,
-      end: `${this.ano}-${this.mes}-${this.dia}T11:00:00`,
-      cliente_id: '3',
-      funcionaria_id: 1,
-      servico_id: 5,
-    },
-    {
-      id: 2,
-      start: `${this.ano}-${this.mes}-${this.dia}T11:00:00`,
-      end: `${this.ano}-${this.mes}-${this.dia}T12:00:00`,
-      cliente_id: '1',
-      funcionaria_id: 2,
-      servico_id: 6,
-    },
-    {
-      id: 3,
-      start: `${this.ano}-${this.mes}-${this.dia}T14:00:00`,
-      end: `${this.ano}-${this.mes}-${this.dia}T17:00:00`,
-      cliente_id: '5',
-      funcionaria_id: 1,
-      servico_id: 4,
-    },
-    {
-      id: 4,
-      start: this.adicionarDias(this.hoje, 1, 0, 10, 0).toISOString().substring(0, 19),
-      end: this.adicionarDias(this.hoje, 1, 0, 10, 45).toISOString().substring(0, 19),
-      cliente_id: '4',
-      funcionaria_id: 3,
-      servico_id: 2,
-    },
-    {
-      id: 5,
-      start: this.adicionarDias(this.hoje, -1, 0, 18, 0).toISOString().substring(0, 19),
-      end: this.adicionarDias(this.hoje, -1, 1, 18, 0).toISOString().substring(0, 19),
-      cliente_id: '7',
-      funcionaria_id: 4,
-      servico_id: 9,
-    },
-  ];
+  private listaAgendamentosDB = new BehaviorSubject<AgendamentoDB[]>([]);
+  listaAgendamentosDB$ = this.listaAgendamentosDB.asObservable();
 
   private listaAgendamentosSubject = new BehaviorSubject<Agendamento[]>([]);
   listaAgendamentos$ = this.listaAgendamentosSubject.asObservable();
 
-  constructor(private clienteService: ClienteService, private servicoService: ServicosService) {
+  private showModalSubject = new BehaviorSubject<boolean>(false);
+  showModal$ = this.showModalSubject.asObservable();
+
+  constructor(
+    private clienteService: ClienteService,
+    private servicoService: ServicosService,
+    private funcionariaService: FuncionariasService,
+    private authService: AuthService,
+    private http: HttpClient
+  ) {
     this.clienteService.listaClientes$.subscribe((clientes) => {
       this.listaClientes = clientes;
     });
     this.servicoService.listaServicos$.subscribe((servicos) => {
       this.listaServicos = servicos;
     });
-    this.getAgendamentos();
-  }
-
-  // Este é o método que vamos "mockar"
-  getAgendamentos(): Observable<Agendamento[]> {
-    console.log('Serviço foi chamado! Retornando dados FAKES (mock).');
-
-    const agendamentosFicticios: Agendamento[] = this.agendamentosBase.map((ag) => {
-      const cliente = this.listaClientes.find((c) => c.cliente_id === ag.cliente_id);
-      const servico = this.listaServicos.find((s) => s.servico_id === ag.servico_id.toString());
-
-      return {
-        id: ag.id,
-        title: `${servico?.nome} - ${cliente?.nome}`,
-        start: ag.start,
-        end: ag.end,
-        backgroundColor: servico?.cor || '#6b7280',
-        borderColor: servico?.cor || '#6b7280',
-        extendedProps: {
-          cliente_id: typeof ag.cliente_id === 'string' ? Number(ag.cliente_id) : ag.cliente_id,
-          funcionaria_id: ag.funcionaria_id,
-          servico_id: ag.servico_id,
-        },
-      };
+    this.funcionariaService.listaFuncionarias$.subscribe((funcionarias) => {
+      this.listaFuncionarias = funcionarias;
     });
 
-    this.listaAgendamentosSubject.next(agendamentosFicticios);
-    return of(agendamentosFicticios).pipe(delay(500));
+    this.getAgendamentos().subscribe();
   }
 
-  adicionarAgendamento(novoAgendamento: Agendamento) {
-    const agendamentosAtuais = this.listaAgendamentosSubject.getValue();
-    const novoId = agendamentosAtuais.length
-      ? Math.max(...agendamentosAtuais.map((ag) => (typeof ag.id === 'number' ? ag.id : 0))) + 1
-      : 1;
-    const cliente = this.listaClientes.find((c) => c.cliente_id === novoAgendamento.cliente_id);
-    const servico = this.listaServicos.find((s) => s.servico_id === novoAgendamento.servico_id);
-    const agendamentoComDetalhes: Agendamento = {
-      ...novoAgendamento,
-      id: novoId,
-      title: `${servico?.nome} - ${cliente?.nome}`,
-      backgroundColor: servico?.cor || '#6b7280',
-      borderColor: servico?.cor || '#6b7280',
-      textColor: '#ffffff',
-    };
-    this.listaAgendamentosSubject.next([...agendamentosAtuais, agendamentoComDetalhes]);
-    console.log('Novo agendamento adicionado (simulação):', agendamentoComDetalhes);
+  toogleModal() {
+    this.showModalSubject.next(!this.showModalSubject.getValue());
+  }
+
+  getAgendamentos(): Observable<AgendamentoDB[]> {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return of([]);
+    }
+    return this.http.get<AgendamentoDB[]>(`${this.apiUrl}/list`, { headers: headers }).pipe(
+      tap((agendamentosRecebidos: AgendamentoDB[]) => {
+        this.listaAgendamentosDB.next(agendamentosRecebidos);
+        const agendamentosConvertidos = agendamentosRecebidos.map((agendamento) => {
+          const cliente = this.listaClientes.find((c) => c.cliente_id === agendamento.cliente_id);
+          const funcionaria = this.listaFuncionarias.find(
+            (f) => f.funcionario_id === agendamento.funcionaria_id
+          );
+          var corFundo = funcionaria?.nome === 'Claudia' ? '#D756AA' : '#489C3E';
+          const servico = this.listaServicos.find((s) => s.servico_id === agendamento.servico_id);
+          return {
+            id: agendamento.agendamento_id,
+            title: `${cliente ? cliente.nome : 'Cliente Desconhecido'} - ${
+              servico ? servico.nome : 'Serviço Desconhecido'
+            } - ${funcionaria ? funcionaria.nome : 'Funcionária Desconhecida'}`,
+            start: agendamento.data_hora_inicio?.toString(),
+            end: agendamento.data_hora_fim?.toString(),
+            backgroundColor: corFundo,
+            borderColor: '#3788d8',
+            textColor: '#ffffff',
+            extendedProps: {
+              cliente_id: agendamento.cliente_id ? agendamento.cliente_id : null,
+              funcionaria_id: agendamento.funcionaria_id ? agendamento.funcionaria_id : null,
+              servico_id: agendamento.servico_id ? agendamento.servico_id : null,
+            },
+          } as Agendamento;
+        });
+        this.listaAgendamentosSubject.next(agendamentosConvertidos);
+      })
+    );
+  }
+
+  adicionarAgendamento(novoAgendamento: AgendamentoDB): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    this.http
+      .post<AgendamentoDB>(`${this.apiUrl}/insert`, novoAgendamento, { headers: headers })
+      .subscribe({
+        next: (agendamentoCadastrado) => {
+          this.getAgendamentos().subscribe();
+        },
+        error: (error) => {
+          console.error('Erro ao cadastrar agendamento:', error);
+        },
+      });
+    return true;
+  }
+
+  atualizarAgendamento(agendamento: AgendamentoDB): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    this.http
+      .put<AgendamentoDB>(`${this.apiUrl}/update/${agendamento.agendamento_id}`, agendamento, {
+        headers: headers,
+      })
+      .subscribe({
+        next: (agendamentoAtualizado) => {
+          this.getAgendamentos().subscribe();
+        },
+        error: (error) => {
+          console.error('Erro ao atualizar agendamento:', error);
+        },
+      });
+    return true;
   }
 
   deleteAgendamento(agendamentoId: number | string) {
-    const agendamentosAtuais = this.listaAgendamentosSubject.getValue();
-    const agendamentosAtualizados = agendamentosAtuais.filter((ag) => ag.id !== agendamentoId);
-    this.listaAgendamentosSubject.next(agendamentosAtualizados);
-    console.log(`Agendamento com ID ${agendamentoId} deletado (simulação).`);
-  }
-
-  private adicionarDias(
-    data: Date,
-    dias: number,
-    horas: number = 0,
-    horaInicial: number = 9,
-    minutosIniciais: number = 0
-  ): Date {
-    const novaData = new Date(data);
-    novaData.setDate(novaData.getDate() + dias);
-    novaData.setHours(horaInicial + horas, minutosIniciais, 0, 0);
-    return novaData;
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return;
+    }
+    this.http.delete(`${this.apiUrl}/remove/${agendamentoId}`, { headers: headers }).subscribe({
+      next: () => {
+        this.getAgendamentos().subscribe();
+      },
+      error: (error) => {
+        console.error('Erro ao deletar agendamento:', error);
+      },
+    });
+    return true;
   }
 }
