@@ -74,10 +74,12 @@ export class AgendamentoService {
           const funcionaria = this.listaFuncionarias.find(
             (f) => f.funcionario_id === agendamento.funcionaria_id
           );
-          if (agendamento.status !== StatusEnum.AGENDADO) {
+          if (agendamento.status == StatusEnum.CANCELADO) {
             var corFundo = '#999999';
+          } else if (agendamento.status == StatusEnum.CONCLUIDO) {
+            var corFundo = '#117A35';
           } else {
-            var corFundo = funcionaria?.nome === 'Claudia' ? '#D756AA' : '#489C3E';
+            var corFundo = funcionaria?.nome === 'Claudia' ? '#D756AA' : '#1CD8E6';
           }
 
           const servico = this.listaServicos.find((s) => s.servico_id === agendamento.servico_id);

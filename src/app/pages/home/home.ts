@@ -1,142 +1,102 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, formatDate } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subject, combineLatest } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { Agendamento } from '../../models/Agendamento';
-import { Cliente } from '../../models/cliente';
-import { Servico } from '../../models/servicos';
-import { Funcionaria } from '../../models/funcionarias';
+import { HomeService } from '../../services/home-service';
+import { FormAgendamentoComponent } from '../../components/forms/forms-agendamentos/forms-agendamentos';
+import { AgendamentoDB } from '../../models/Agendamento';
 import { AgendamentoService } from '../../services/agendamento-service';
+import { Cliente } from '../../models/cliente';
+import { Funcionaria } from '../../models/funcionarias';
+import { Servico } from '../../models/servicos';
 import { ClienteService } from '../../services/cliente-service';
-import { ServicosService } from '../../services/servicos-service';
 import { FuncionariasService } from '../../services/funcionarias-service';
-import { Aniversariante } from '../../models/IAniversariante';
-import { Loader } from '../../services/loader';
+import { ServicosService } from '../../services/servicos-service';
 
 @Component({
   selector: 'app-home',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormAgendamentoComponent],
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
 })
-export class Home implements OnInit, OnDestroy {
-  agendamentosHoje: number = 0;
-  faturamentoPrevisto: number = 0;
-  clientesNovos: number = 0;
-
-  // Corrigir o problema para importar a interface IProximoAtendimento
+export class HomeComponent implements OnInit {
+  agendamentosHoje = 0;
+  faturamentoPrevisto = 0;
+  faturamentoRealizado = 0;
+  porcentagemFaturamento = 0;
+  clientesNovos = 0;
   proximosAtendimentos: any[] = [];
-  aniversariantesDaSemana: Aniversariante[] = [];
+  aniversariantesDaSemana: any[] = [];
+  hojeFormatado: string = '';
 
-  private destroy$ = new Subject<void>();
+  listaClientes: Cliente[] = [];
+  listaFuncionarias: Funcionaria[] = [];
+  listaServicos: Servico[] = [];
+  agendamentoSelecionado: any | null = null;
 
   constructor(
+    private homeService: HomeService,
     private router: Router,
     private agendamentoService: AgendamentoService,
     private clienteService: ClienteService,
-    private servicosService: ServicosService,
-    private funcionariasService: FuncionariasService,
-    private loader: Loader
+    private funcionariaService: FuncionariasService,
+    private servicoService: ServicosService
   ) {}
 
-  ngOnInit(): void {
-    this.loader.carregarDados();
-    combineLatest([
-      this.agendamentoService.listaAgendamentos$,
-      this.clienteService.listaClientes$,
-      this.servicosService.listaServicos$,
-      this.funcionariasService.listaFuncionarias$,
-    ])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(([agendamentos, clientes, servicos, funcionarias]) => {
-        this._processarDadosDashboard(agendamentos, clientes, servicos, funcionarias);
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private _processarDadosDashboard(
-    agendamentos: Agendamento[],
-    clientes: Cliente[],
-    servicos: Servico[],
-    funcionarias: Funcionaria[]
-  ): void {
-    const hoje = new Date();
-
-    const agendamentosDoDia = agendamentos.filter((ag) => {
-      const dataAgendamento = new Date(ag.start!);
-      return dataAgendamento.toDateString() === hoje.toDateString();
+  async ngOnInit() {
+    this.carregarDados();
+    // No ngOnInit ou onde você carrega os dados
+    this.hojeFormatado = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
     });
+    // Capitalize a primeira letra se quiser (ex: "Sexta-feira...")
+    this.hojeFormatado = this.hojeFormatado.charAt(0).toUpperCase() + this.hojeFormatado.slice(1);
 
-    this.agendamentosHoje = agendamentosDoDia.length;
-    this.faturamentoPrevisto = agendamentosDoDia.reduce((total, ag) => {
-      const servico = servicos.find((s) => s.servico_id === ag.extendedProps!.servico_id);
-      return total + (servico?.preco || 0);
-    }, 0);
-    this.clientesNovos = 3;
-
-    // PRÓXIMOS ATENDIMENTOS
-    this.proximosAtendimentos = agendamentosDoDia
-      .filter((ag) => new Date(ag.start!) > hoje)
-      .sort((a, b) => new Date(a.start!).getTime() - new Date(b.start!).getTime())
-      .slice(0, 4)
-      .map((ag) => {
-        const cliente = clientes.find((c) => c.cliente_id === ag.extendedProps!.cliente_id);
-        const servico = servicos.find((s) => s.servico_id === ag.extendedProps!.servico_id);
-        const funcionaria = funcionarias.find(
-          (f) => f.funcionario_id === ag.extendedProps!.funcionaria_id
-        );
-        const duracao = (new Date(ag.end!).getTime() - new Date(ag.start!).getTime()) / 60000;
-
-        return {
-          hora: formatDate(ag.start!, 'HH:mm', 'pt-BR'),
-          duracao: duracao,
-          servico: servico?.nome || 'Serviço não encontrado',
-          cliente: cliente?.nome || 'Cliente não encontrado',
-          funcionaria: funcionaria?.nome || 'Profissional não encontrado',
-        };
-      });
-
-    // ANIVERSARIANTES DA SEMANA
-    const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    const daquiSeteDias = new Date(hojeSemHoras.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    this.aniversariantesDaSemana = clientes
-      .map((cliente) => {
-        const dataNascimento = cliente.data_nascimento;
-        const mes = dataNascimento?.getMonth();
-        const dia = dataNascimento?.getDate();
-
-        const niverEsteAno = new Date(hoje.getFullYear(), mes!, dia);
-        return { ...cliente, niverEsteAno };
-      })
-      .filter(
-        (cliente) => cliente.niverEsteAno >= hojeSemHoras && cliente.niverEsteAno < daquiSeteDias
-      )
-      .sort((a, b) => a.niverEsteAno.getTime() - b.niverEsteAno.getTime())
-      .map((cliente) => {
-        const ehHoje = cliente.niverEsteAno.toDateString() === hojeSemHoras.toDateString();
-        return {
-          nome: `${cliente.nome} ${cliente.sobrenome}`,
-          data: ehHoje
-            ? `Hoje, ${formatDate(cliente.niverEsteAno, "d 'de' MMMM", 'pt-BR')}!`
-            : formatDate(cliente.niverEsteAno, "EEEE, d 'de' MMMM", 'pt-BR'),
-          ehHoje: ehHoje,
-        };
-      });
+    this.clienteService.listaClientes$.subscribe((clientes) => {
+      this.listaClientes = clientes;
+    });
+    this.funcionariaService.listaFuncionarias$.subscribe((funcionarias) => {
+      this.listaFuncionarias = funcionarias;
+    });
+    this.servicoService.listaServicos$.subscribe((servicos) => {
+      this.listaServicos = servicos;
+    });
   }
 
-  novoAgendamento(): void {
-    this.agendamentoService.toogleModal();
+  async carregarDados() {
+    const dados = await this.homeService.getDadosHome();
+
+    this.agendamentosHoje = dados.agendamentosHoje;
+    this.faturamentoPrevisto = dados.faturamentoPrevisto;
+    this.faturamentoRealizado = dados.faturamentoRealizado;
+    this.clientesNovos = dados.clientesNovos;
+    this.proximosAtendimentos = dados.proximosAtendimentos;
+    this.aniversariantesDaSemana = dados.aniversariantesDaSemana;
+    this.porcentagemFaturamento =
+      this.faturamentoPrevisto > 0
+        ? (this.faturamentoRealizado / this.faturamentoPrevisto) * 100
+        : 0;
+  }
+
+  novoAgendamento() {
+    const start = new Date();
+    const end = new Date(start.getTime() + 30 * 60000); // Adiciona 30 minutos
+    this.agendamentoSelecionado = {
+      start: start,
+      end: end,
+      extendedProps: { cliente_id: null, servico_id: null, funcionaria_id: null },
+    };
+  } // Ajuste a rota
+  irParaAgendaCompleta() {
     this.router.navigate(['/agendamentos']);
   }
 
-  irParaAgendaCompleta(): void {
-    this.router.navigate(['/agendamentos']);
+  salvarAgendamento(agendamento: AgendamentoDB) {
+    this.agendamentoService.adicionarAgendamento(agendamento);
+    this.fecharModal();
+  }
+  fecharModal() {
+    this.agendamentoSelecionado = null;
   }
 }
