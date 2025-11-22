@@ -47,4 +47,9 @@ export const routes: Routes = [
       import('./components/agendamentos/agendamentos').then((m) => m.Agendamentos),
     canActivate: [AuthGuard],
   },
+  {
+    path: 'transacoes-lista',
+    loadComponent: () => import('./components/transacoes/transacoes').then((m) => m.Transacoes),
+    canActivate: [AuthGuard],
+  },
 ];

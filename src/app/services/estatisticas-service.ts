@@ -1,220 +1,175 @@
-// src/app/services/estatisticas.service.ts
-
 import { Injectable } from '@angular/core';
-import { formatDate } from '@angular/common';
-import { HistoricoAgendamento } from '../models/IHistoricoAgendamento';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { Enviroment } from '../enviroments/enviroment';
+import { AuthService } from './auth-service';
+
+// Interface que reflete o JSON exato que sua função SQL retorna
+interface DashboardResponse {
+  kpis: {
+    faturamentoTotal: number;
+    totalAtendimentos: number;
+    ticketMedio: number;
+  };
+  novosClientes: number;
+  graficoFaturamentoDia: Array<{ label: string; valor: number }>;
+  graficoServicos: Array<{ label: string; valor: number }>;
+  graficoEquipe: Array<{ label: string; quantidade: number; valor: number }>;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class EstatisticasService {
-  // Mocks para simular tabelas do banco de dados
-  private servicosMock = [
-    { id: 1, nome: 'Corte Feminino', preco: 85.0 },
-    { id: 2, nome: 'Corte Masculino', preco: 45.0 },
-    { id: 4, nome: 'Escova Progressiva', preco: 250.0 },
-    { id: 5, nome: 'Coloração', preco: 120.0 },
-    { id: 6, nome: 'Manicure', preco: 30.0 },
-    { id: 9, nome: 'Limpeza de Pele', preco: 150.0 },
-  ];
-  private funcionariasMock = [
-    { id: 1, nome: 'Juliana' },
-    { id: 2, nome: 'Beatriz' },
-    { id: 3, nome: 'Roberto' },
-    { id: 4, nome: 'Vanessa' },
-  ];
+  // Aponta para a rota da sua API que chama a função RPC 'get_dashboard_stats'
+  private apiUrl = `${Enviroment.apiUrl}/estatisticas/dash`;
 
-  private dadosFicticiosCompletos: HistoricoAgendamento[] = [];
-
-  constructor() {
-    this.dadosFicticiosCompletos = this._gerarDadosFicticios();
-  }
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   public async getDadosDashboard(periodo: 'Atual' | 'Passado'): Promise<any> {
-    const hoje = new Date();
-    const dadosFiltrados = this.dadosFicticiosCompletos.filter((dado) => {
-      const dataAgendamento = new Date(dado.data);
-      if (periodo === 'Atual') {
-        return (
-          dataAgendamento.getMonth() === hoje.getMonth() &&
-          dataAgendamento.getFullYear() === hoje.getFullYear()
-        );
-      }
-      if (periodo === 'Passado') {
-        const mesPassado = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-        return (
-          dataAgendamento.getMonth() === mesPassado.getMonth() &&
-          dataAgendamento.getFullYear() === mesPassado.getFullYear()
-        );
-      }
-      return true;
-    });
-
-    const kpis = this._calcularKPIs(dadosFiltrados);
-    const dadosGraficoFaturamento = this._processarGraficoFaturamento(dadosFiltrados);
-    const dadosGraficoServicos = this._processarGraficoServicos(dadosFiltrados);
-    const dadosGraficoEquipe = this._processarGraficoEquipe(dadosFiltrados);
-    const dadosGraficoEquipeFaturamento =
-      this._processarGraficoEquipePorFaturamento(dadosFiltrados);
-
-    return {
-      ...kpis,
-      ...dadosGraficoFaturamento,
-      ...dadosGraficoServicos,
-      ...dadosGraficoEquipe,
-      ...dadosGraficoEquipeFaturamento,
-    };
-  }
-
-  private _calcularKPIs(dados: HistoricoAgendamento[]): any {
-    const totalAtendimentos = dados.length;
-    const faturamentoTotal = dados.reduce((sum, item) => sum + item.valor, 0);
-    const ticketMedio = totalAtendimentos > 0 ? faturamentoTotal / totalAtendimentos : 0;
-    const novosClientes = Math.floor(totalAtendimentos / 5);
-    return { faturamentoTotal, totalAtendimentos, ticketMedio, novosClientes };
-  }
-
-  private _processarGraficoFaturamento(dados: HistoricoAgendamento[]): any {
-    const faturamentoPorDia = dados.reduce((acc, dado) => {
-      const dia = formatDate(dado.data, 'dd/MM', 'pt-BR');
-      acc[dia] = (acc[dia] || 0) + dado.valor;
-      return acc;
-    }, {} as { [key: string]: number });
-
-    const labelsOrdenados = Object.keys(faturamentoPorDia).sort((a, b) => {
-      const [diaA, mesA] = a.split('/');
-      const [diaB, mesB] = b.split('/');
-      return (
-        new Date(2025, Number(mesA) - 1, Number(diaA)).getTime() -
-        new Date(2025, Number(mesB) - 1, Number(diaB)).getTime()
-      );
-    });
-
-    return {
-      lineChartData: {
-        labels: labelsOrdenados,
-        datasets: [
-          {
-            data: labelsOrdenados.map((label) => faturamentoPorDia[label]),
-            label: 'Faturamento',
-            fill: true,
-            tension: 0.3,
-            borderColor: 'rgba(236, 72, 153, 1)',
-            backgroundColor: 'rgba(236, 72, 153, 0.1)',
-          },
-        ],
-      },
-    };
-  }
-
-  private _processarGraficoServicos(dados: HistoricoAgendamento[]): any {
-    const faturamentoPorServico = dados.reduce((acc, dado) => {
-      const servico = this.servicosMock.find((s) => s.id === dado.servico_id);
-      if (servico) {
-        acc[servico.nome] = (acc[servico.nome] || 0) + dado.valor;
-      }
-      return acc;
-    }, {} as { [key: string]: number });
-
-    const servicosOrdenados = Object.entries(faturamentoPorServico).sort(
-      ([, a], [, b]) => (b as number) - (a as number)
-    );
-
-    return {
-      servicosFaturamentoChartData: {
-        labels: servicosOrdenados.map((item) => item[0]),
-        datasets: [
-          {
-            data: servicosOrdenados.map((item) => item[1]),
-            label: 'Faturamento por Serviço',
-            backgroundColor: '#fbcfe8',
-            borderColor: '#ec4899',
-            borderWidth: 2,
-            borderRadius: 8,
-          },
-        ],
-      },
-    };
-  }
-
-  private _processarGraficoEquipe(dados: HistoricoAgendamento[]): any {
-    const atendimentosPorFuncionaria = dados.reduce((acc, dado) => {
-      const func = this.funcionariasMock.find((f) => f.id === dado.funcionaria_id);
-      if (func) {
-        acc[func.nome] = (acc[func.nome] || 0) + 1;
-      }
-      return acc;
-    }, {} as { [key: string]: number });
-
-    return {
-      equipeChartData: {
-        labels: Object.keys(atendimentosPorFuncionaria),
-        datasets: [
-          {
-            data: Object.values(atendimentosPorFuncionaria),
-            label: 'Nº de Atendimentos',
-            backgroundColor: [
-              'rgba(236, 72, 153, 0.6)',
-              'rgba(217, 70, 239, 0.6)',
-              'rgba(168, 85, 247, 0.6)',
-              'rgba(139, 92, 246, 0.6)',
-            ],
-            borderColor: ['#ec4899', '#d946ef', '#a855f7', '#8b5cf6'],
-            borderWidth: 2,
-            borderRadius: 8,
-          },
-        ],
-      },
-    };
-  }
-
-  private _processarGraficoEquipePorFaturamento(dados: HistoricoAgendamento[]): any {
-    const faturamentoPorFuncionaria = dados.reduce((acc, dado) => {
-      const func = this.funcionariasMock.find((f) => f.id === dado.funcionaria_id);
-
-      if (func) {
-        acc[func.nome] = (acc[func.nome] || 0) + dado.valor;
-      }
-
-      return acc;
-    }, {} as { [key: string]: number });
-
-    return {
-      equipeFaturamentoChartData: {
-        labels: Object.keys(faturamentoPorFuncionaria),
-        datasets: [
-          {
-            data: Object.values(faturamentoPorFuncionaria),
-            label: 'Faturamento Gerado',
-            backgroundColor: 'rgba(236, 72, 153, 0.6)',
-            borderColor: '#ec4899',
-            borderWidth: 2,
-            borderRadius: 8,
-          },
-        ],
-      },
-    };
-  }
-
-  private _gerarDadosFicticios(): HistoricoAgendamento[] {
-    const dados: HistoricoAgendamento[] = [];
-    const hoje = new Date();
-    for (let i = 0; i < 90; i++) {
-      const data = new Date(hoje);
-      data.setDate(hoje.getDate() - i);
-      const numAtendimentos = Math.floor(Math.random() * 8) + 5;
-      for (let j = 0; j < numAtendimentos; j++) {
-        const servico = this.servicosMock[Math.floor(Math.random() * this.servicosMock.length)];
-        const funcionaria =
-          this.funcionariasMock[Math.floor(Math.random() * this.funcionariasMock.length)];
-        dados.push({
-          data: new Date(data),
-          valor: servico.preco,
-          servico_id: servico.id,
-          funcionaria_id: funcionaria.id,
-        });
-      }
+    const { inicio, fim } = this._calcularDatas(periodo);
+    const header = this.authService.getHeader();
+    if (!header) {
+      throw new Error('Usuário não autenticado');
     }
-    return dados;
+
+    try {
+      // 1. Chama a API. Espera receber o Objeto JSON estruturado (DashboardResponse)
+      const dadosDoBanco = await firstValueFrom(
+        this.http.post<DashboardResponse>(
+          this.apiUrl,
+          {
+            data_inicio: inicio.toISOString(),
+            data_fim: fim.toISOString(),
+          },
+          { headers: header }
+        )
+      );
+
+      // 2. Se o banco retornar vazio ou nulo, entrega objeto zerado para não quebrar a tela
+      if (!dadosDoBanco) {
+        return this._objetoVazio();
+      }
+
+      // 3. Formata os dados brutos do banco para o formato visual do Chart.js
+      return this._formatarDadosParaComponente(dadosDoBanco);
+    } catch (error) {
+      console.error('Erro ao buscar dados do dashboard:', error);
+      return this._objetoVazio();
+    }
+  }
+
+  // --- FORMATAÇÃO (Transforma JSON do Banco em Gráficos) ---
+  private _formatarDadosParaComponente(dados: DashboardResponse) {
+    // KPIs
+    const kpis = dados.kpis || { faturamentoTotal: 0, totalAtendimentos: 0, ticketMedio: 0 };
+    const novosClientes = dados.novosClientes || 0;
+
+    // 1. Gráfico Linha (Evolução Diária)
+    const dias = dados.graficoFaturamentoDia || [];
+    const lineChartData = {
+      labels: dias.map((d) => d.label),
+      datasets: [
+        {
+          data: dias.map((d) => d.valor),
+          label: 'Faturamento',
+          fill: true,
+          tension: 0.3,
+          borderColor: '#ec4899',
+          backgroundColor: 'rgba(236, 72, 153, 0.1)',
+          pointBackgroundColor: '#ec4899',
+          pointBorderColor: '#fff',
+        },
+      ],
+    };
+
+    // 2. Gráfico Serviços (Barras Horizontais)
+    const servicos = dados.graficoServicos || [];
+    const servicosFaturamentoChartData = {
+      labels: servicos.map((s) => s.label),
+      datasets: [
+        {
+          data: servicos.map((s) => s.valor),
+          label: 'Faturamento',
+          backgroundColor: '#fbcfe8',
+          borderColor: '#ec4899',
+          borderWidth: 2,
+          borderRadius: 4,
+          hoverBackgroundColor: '#f9a8d4',
+        },
+      ],
+    };
+
+    // 3. Gráficos Equipe (Quantidade e Faturamento vêm da mesma lista do banco)
+    const equipe = dados.graficoEquipe || [];
+
+    // 3.1 Equipe - Quantidade
+    const equipeChartData = {
+      labels: equipe.map((e) => e.label),
+      datasets: [
+        {
+          data: equipe.map((e) => e.quantidade),
+          label: 'Atendimentos',
+          backgroundColor: 'rgba(168, 85, 247, 0.6)', // Roxo
+          borderColor: '#a855f7',
+          borderWidth: 2,
+          borderRadius: 4,
+        },
+      ],
+    };
+
+    // 3.2 Equipe - Faturamento
+    const equipeFaturamentoChartData = {
+      labels: equipe.map((e) => e.label),
+      datasets: [
+        {
+          data: equipe.map((e) => e.valor),
+          label: 'Faturamento',
+          backgroundColor: 'rgba(236, 72, 153, 0.6)', // Rosa
+          borderColor: '#ec4899',
+          borderWidth: 2,
+          borderRadius: 4,
+        },
+      ],
+    };
+
+    // Retorna o objeto final que o seu componente espera
+    return {
+      faturamentoTotal: kpis.faturamentoTotal,
+      totalAtendimentos: kpis.totalAtendimentos,
+      ticketMedio: kpis.ticketMedio,
+      novosClientes: novosClientes,
+      lineChartData,
+      servicosFaturamentoChartData,
+      equipeChartData,
+      equipeFaturamentoChartData,
+    };
+  }
+
+  private _calcularDatas(periodo: 'Atual' | 'Passado') {
+    const hoje = new Date();
+    let inicio: Date, fim: Date;
+
+    if (periodo === 'Atual') {
+      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
+    } else {
+      inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+      fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0, 23, 59, 59);
+    }
+    return { inicio, fim };
+  }
+
+  private _objetoVazio() {
+    return {
+      faturamentoTotal: 0,
+      totalAtendimentos: 0,
+      ticketMedio: 0,
+      novosClientes: 0,
+      lineChartData: { labels: [], datasets: [] },
+      servicosFaturamentoChartData: { labels: [], datasets: [] },
+      equipeChartData: { labels: [], datasets: [] },
+      equipeFaturamentoChartData: { labels: [], datasets: [] },
+    };
   }
 }

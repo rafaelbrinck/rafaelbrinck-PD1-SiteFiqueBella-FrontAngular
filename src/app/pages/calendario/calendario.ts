@@ -68,18 +68,16 @@ export class Calendario implements OnInit, OnDestroy {
         this.agendamentoService.getAgendamentos().subscribe();
       }
       this.listaAgendamentos = agendamentos;
-      // Atualiza os eventos do calendário
-      this.calendarOptions.events = this.listaAgendamentos;
+
+      if (this.calendarOptions) {
+        this.calendarOptions.events = this.listaAgendamentos;
+      }
     });
-    // Lógica Mobile-First para a visão inicial
+
     if (window.innerWidth < 768) {
       this.initialView = 'timeGridDay';
     }
 
-    this.agendamentoService.showModal$.subscribe((show) => {
-      this.isModalVisible = show;
-    });
-    // Inscreve-se nos outros serviços para preencher os dropdowns do formulário
     this.servicosService.listaServicos$
       .pipe(takeUntil(this.destroy$))
       .subscribe((servicos) => (this.listaServicos = servicos));
@@ -90,7 +88,6 @@ export class Calendario implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((funcionarias) => (this.listaFuncionarias = funcionarias));
 
-    // Inicializa as opções do calendário
     this.calendarOptions = {
       plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
       initialView: this.initialView,
@@ -114,6 +111,34 @@ export class Calendario implements OnInit, OnDestroy {
         right: 'dayGridMonth,timeGridWeek,timeGridDay',
       },
       buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia', list: 'Lista' },
+
+      // --- CUSTOMIZAÇÃO DO LAYOUT DOS EVENTOS ---
+      eventContent: (arg) => {
+        // 1. Layout para visão de DIA (Horizontal / Uma linha)
+        if (arg.view.type === 'timeGridDay') {
+          return {
+            html: `
+              <div class="flex items-center h-full w-full overflow-hidden px-2 border-l-4 border-white/30">
+                <span class="font-bold whitespace-nowrap mr-2 text-xs">${arg.timeText}</span>
+                <span class="whitespace-nowrap overflow-hidden text-ellipsis text-xs font-medium">${arg.event.title}</span>
+              </div>
+            `,
+          };
+        }
+
+        // 2. Layout para visão de SEMANA (Vertical / Empilhado)
+        // Fica mais bonito em colunas estreitas
+        return {
+          html: `
+            <div class="flex flex-col justify-center h-full w-full overflow-hidden px-1 py-0.5 border-l-4 border-white/40 leading-tight">
+              <div class="text-[10px] opacity-90 font-semibold mb-0.5">${arg.timeText}</div>
+              <div class="text-xs font-bold overflow-hidden text-ellipsis whitespace-nowrap">${arg.event.title}</div>
+            </div>
+          `,
+        };
+      },
+      // -------------------------------------------
+
       viewDidMount: (info) => {
         if (info.view.type === 'timeGridWeek') {
           const startDate = info.view.activeStart;
@@ -144,8 +169,9 @@ export class Calendario implements OnInit, OnDestroy {
           html: `<div class="fc-dayheader-container"><span class="fc-dayheader-date">${formattedDate}</span><span class="fc-dayheader-day">${dayOfWeek}</span></div>`,
         };
       },
+
       events: this.listaAgendamentos,
-      // eventResize: this.handleEventResize.bind(this),
+
       eventClick: this.handleEventClick.bind(this),
       dateClick: this.handleDateClick.bind(this),
       select: this.handleSelect.bind(this),
@@ -159,7 +185,10 @@ export class Calendario implements OnInit, OnDestroy {
 
   // --- MÉTODOS DE CONTROLE DO MODAL ---
   abrirModalExterno() {
-    this.agendamentoService.toogleModal();
+    this.agendamentoSelecionado = {
+      start: new Date().toISOString().substring(0, 16),
+      end: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString().substring(0, 16),
+    };
   }
   abrirModalParaNovoPadrao() {
     const now = new Date();
@@ -177,7 +206,6 @@ export class Calendario implements OnInit, OnDestroy {
       end: end,
       extendedProps: { cliente_id: null, servico_id: null, funcionaria_id: null },
     };
-    this.isModalVisible = true;
   }
 
   abrirModalParaEditar(clickInfo: EventClickArg) {
@@ -190,11 +218,9 @@ export class Calendario implements OnInit, OnDestroy {
       borderColor: clickInfo.event.borderColor,
       extendedProps: clickInfo.event.extendedProps,
     };
-    this.isModalVisible = true;
   }
 
   fecharModal() {
-    this.agendamentoService.toogleModal();
     this.agendamentoSelecionado = null;
   }
 
@@ -237,6 +263,7 @@ export class Calendario implements OnInit, OnDestroy {
       start: clickInfo.event.startStr,
       end: clickInfo.event.endStr,
       title: clickInfo.event.title,
+      status: clickInfo.event.extendedProps['status'],
       extendedProps: props,
     };
 

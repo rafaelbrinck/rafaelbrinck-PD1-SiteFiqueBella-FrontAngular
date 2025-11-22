@@ -90,7 +90,7 @@
 }
 
 :host ::ng-deep .fc-event-main {
-  padding: 0.25rem; /* p-1 */
+  padding: 1px 2px !important; /* Ajuste conforme necessário */
   font-weight: 600; /* font-semibold */
 }
 

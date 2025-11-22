@@ -9,7 +9,7 @@ export class Agendamento {
   cliente_id?: string | null;
   funcionaria_id?: string | null;
   servico_id?: string | null;
-
+  status?: StatusEnum;
   extendedProps?: {
     cliente_id?: string | null;
     funcionaria_id?: string | null;

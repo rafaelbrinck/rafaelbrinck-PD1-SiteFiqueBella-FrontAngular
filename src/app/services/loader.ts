@@ -3,6 +3,8 @@ import { ClienteService } from './cliente-service';
 import { ServicosService } from './servicos-service';
 import { FuncionariasService } from './funcionarias-service';
 import { AgendamentoService } from './agendamento-service';
+import { MetodoPagamentoService } from './metodo-pagamento-service';
+import { TransacoesService } from './transacoes-service';
 @Injectable({
   providedIn: 'root',
 })
@@ -11,7 +13,9 @@ export class Loader {
     private clienteService: ClienteService,
     private servicosService: ServicosService,
     private funcionariasService: FuncionariasService,
-    private agendamentoService: AgendamentoService
+    private agendamentoService: AgendamentoService,
+    private metodosPagamentoService: MetodoPagamentoService,
+    private transacoesService: TransacoesService
   ) {}
 
   carregarDados(): void {
@@ -33,6 +37,16 @@ export class Loader {
     this.agendamentoService.listaAgendamentos$.subscribe((agendamentos) => {
       if (agendamentos.length === 0) {
         this.agendamentoService.getAgendamentos().subscribe();
+      }
+    });
+    this.metodosPagamentoService.listaMetodosPagamentos$.subscribe((metodos) => {
+      if (metodos.length === 0) {
+        this.metodosPagamentoService.carregarMetodosPagamento().subscribe();
+      }
+    });
+    this.transacoesService.listaTransacoes$.subscribe((transacoes) => {
+      if (transacoes.length === 0) {
+        this.transacoesService.carregarTransacoes();
       }
     });
   }

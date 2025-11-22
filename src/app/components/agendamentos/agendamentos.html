@@ -52,19 +52,19 @@
     <div class="hidden md:block">
       <table class="w-full text-left">
         <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
+          <tr class="text-center">
             <th class="p-4 font-semibold text-gray-600">Cliente</th>
             <th class="p-4 font-semibold text-gray-600">Serviço</th>
             <th class="p-4 font-semibold text-gray-600">Profissional</th>
             <th class="p-4 font-semibold text-gray-600">Data</th>
             <th class="p-4 font-semibold text-gray-600">Horário</th>
-            <th class="p-4 font-semibold text-gray-600 text-center">Ações</th>
+            <th class="p-4 font-semibold text-gray-600">Status</th>
           </tr>
         </thead>
         <tbody *ngIf="listaAgendamentos.length > 0; else noAgendamentos">
-          <tr *ngFor="let ag of listaAgendamentos" class="hover:bg-pink-50 transition-colors">
+          <tr *ngFor="let ag of listaAgendamentos" class="hover:bg-pink-50 transition-colors text-center" (click)="abrirModalDetalhes(ag)">
             
-            <td class="p-4 border-b border-gray-200 font-medium text-gray-800">
+            <td class="p-4 border-b border-gray-200 font-medium text-gray-800 text-start">
               {{ getClienteNome(ag.cliente_id!) }}
             </td>
             <td class="p-4 border-b border-gray-200 text-gray-600">
@@ -79,12 +79,14 @@
             <td class="p-4 border-b border-gray-200 text-gray-600">
               {{ ag.data_hora_inicio | date:'HH:mm' }} - {{ ag.data_hora_fim | date:'HH:mm' }}
             </td>
-            
             <td class="p-4 border-b border-gray-200">
-              <div class="flex gap-4 justify-center text-xl">
-                <button (click)="abrirModalParaEditar(ag)" title="Editar Agendamento" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="bi bi-pencil-square"></i></button>
-                <button (click)="deletar(ag.agendamento_id!)" title="Excluir Agendamento" class="text-gray-500 hover:text-red-500 transition-colors"><i class="bi bi-trash3-fill"></i></button>
-              </div>
+  
+              <span class="rounded-2xl border-2 p-1.5 text-sm font-bold"
+                    [ngClass]="getClasseDeStatus(ag.status)">
+
+                {{ ag.status! | titlecase }} 
+              </span>
+
             </td>
           </tr>
         </tbody>
@@ -97,5 +99,18 @@
         <p>Nenhum agendamento encontrado.</p>
       </div>
     </ng-template>
+  </div>
+</div>
+
+<div *ngIf="isModalDetalhesVisible" (click)="fecharModalDetalhes()" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
+  <div (click)="$event.stopPropagation()" class="bg-gray-100 rounded-lg shadow-xl w-full max-w-2xl m-4 animate-fade-in-up">
+    <app-detalhe-agendamento
+      [agendamento]="agendamentoSelecionado"
+      [cliente]="clienteSelecionado"
+      [servico]="servicoSelecionado"
+      [funcionaria]="funcionariaSelecionada"
+      [apenasVisualizar]="true"
+      (close)="fecharModalDetalhes()">
+    </app-detalhe-agendamento>
   </div>
 </div>

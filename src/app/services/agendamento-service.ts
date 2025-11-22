@@ -5,12 +5,13 @@ import { Cliente } from '../models/cliente';
 import { Servico } from '../models/servicos';
 import { ClienteService } from './cliente-service';
 import { ServicosService } from './servicos-service';
-import { Agendamento, AgendamentoDB } from '../models/Agendamento';
+import { Agendamento, AgendamentoDB, StatusEnum } from '../models/Agendamento';
 import { Enviroment } from '../enviroments/enviroment';
 import { Funcionaria } from '../models/funcionarias';
 import { FuncionariasService } from './funcionarias-service';
 import { AuthService } from './auth-service';
 import { HttpClient } from '@angular/common/http';
+import { TransacoesService } from './transacoes-service';
 
 @Injectable({
   providedIn: 'root',
@@ -36,7 +37,8 @@ export class AgendamentoService {
     private servicoService: ServicosService,
     private funcionariaService: FuncionariasService,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private transacaoService: TransacoesService
   ) {
     this.clienteService.listaClientes$.subscribe((clientes) => {
       this.listaClientes = clientes;
@@ -52,7 +54,11 @@ export class AgendamentoService {
   }
 
   toogleModal() {
-    this.showModalSubject.next(!this.showModalSubject.getValue());
+    if (this.showModalSubject.getValue() == true) {
+      this.showModalSubject.next(false);
+    } else {
+      this.showModalSubject.next(true);
+    }
   }
 
   getAgendamentos(): Observable<AgendamentoDB[]> {
@@ -68,7 +74,12 @@ export class AgendamentoService {
           const funcionaria = this.listaFuncionarias.find(
             (f) => f.funcionario_id === agendamento.funcionaria_id
           );
-          var corFundo = funcionaria?.nome === 'Claudia' ? '#D756AA' : '#489C3E';
+          if (agendamento.status !== StatusEnum.AGENDADO) {
+            var corFundo = '#999999';
+          } else {
+            var corFundo = funcionaria?.nome === 'Claudia' ? '#D756AA' : '#489C3E';
+          }
+
           const servico = this.listaServicos.find((s) => s.servico_id === agendamento.servico_id);
           return {
             id: agendamento.agendamento_id,
@@ -80,6 +91,7 @@ export class AgendamentoService {
             backgroundColor: corFundo,
             borderColor: '#3788d8',
             textColor: '#ffffff',
+            status: agendamento.status,
             extendedProps: {
               cliente_id: agendamento.cliente_id ? agendamento.cliente_id : null,
               funcionaria_id: agendamento.funcionaria_id ? agendamento.funcionaria_id : null,
@@ -143,6 +155,36 @@ export class AgendamentoService {
         console.error('Erro ao deletar agendamento:', error);
       },
     });
+    return true;
+  }
+
+  updateStatus(
+    agendamentoId: string,
+    status: StatusEnum,
+    metodo_pagamento_id: string,
+    valor_total: number
+  ): boolean {
+    const headers = this.authService.getHeader();
+    if (!headers) {
+      return false;
+    }
+    this.http
+      .put(
+        `${this.apiUrl}/updateStatus/${agendamentoId}`,
+        { status, metodo_pagamento_id, valor_total },
+        { headers: headers }
+      )
+      .subscribe({
+        next: () => {
+          this.getAgendamentos().subscribe();
+          if (status === StatusEnum.CONCLUIDO) {
+            this.transacaoService.carregarTransacoes();
+          }
+        },
+        error: (error) => {
+          console.error('Erro ao atualizar status do agendamento:', error);
+        },
+      });
     return true;
   }
 }
